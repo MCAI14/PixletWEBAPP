@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixlet</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        .search-container {
+            margin-top: 20px;
+        }
+        .search-bar {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+        }
+        .store-icon-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            text-align: center;
+        }
+        .store-icon {
+            width: 50px;
+            height: 50px;
+            z-index: 1000; /* Ensure the icon is on top */
+        }
+        .store-text {
+            font-size: 12px;
+            color: black;
+        }
+        .login-button-container {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .login-button, .logout-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-button:hover, .logout-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('loggedInUser');
+            const loginButton = document.querySelector('.login-button');
+            const logoutButton = document.querySelector('.logout-button');
+
+            if (username) {
+                loginButton.textContent = username;
+                loginButton.disabled = false;
+                loginButton.addEventListener('click', function() {
+                    window.location.href = 'user-account.html';
+                });
+                logoutButton.style.display = 'block';
+            } else {
+                loginButton.addEventListener('click', function() {
+                    window.location.href = 'login.html';
+                });
+                logoutButton.style.display = 'none';
+            }
+
+            const searchForm = document.querySelector('.search-container form');
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const query = document.querySelector('.search-bar').value;
+                const searchPreference = localStorage.getItem(`${username}_searchPreference`) || 'google';
+                let searchUrl;
+
+                switch (searchPreference) {
+                    case 'bing':
+                        searchUrl = `https://www.bing.com/search?q=${query}`;
+                        break;
+                    case 'duckduckgo':
+                        searchUrl = `https://duckduckgo.com/?q=${query}`;
+                        break;
+                    case 'google':
+                    default:
+                        searchUrl = `https://www.google.com/search?q=${query}`;
+                        break;
+                }
+
+                window.location.href = searchUrl;
+            });
+        });
+
+        function handleLogout() {
+            localStorage.removeItem('loggedInUser');
+            location.reload(); // Reload the page to update the UI
+        }
+    </script>
+</head>
+<body>
+    <div class="store-icon-container">
+        <a href="PixelApps/index.html">
+            <img src="Loja.ico" alt="Store Icon" class="store-icon">
+        </a>
+        <div class="store-text">Loja</div>
+    </div>
+    <h1>Welcome to Pixlet</h1>
+    <div class="search-container">
+        <form>
+            <input type="text" name="q" class="search-bar" placeholder="Search...">
+            <input type="submit" value="Search">
+        </form>
+    </div>
+    <div class="login-button-container">
+        <button class="login-button">Login</button>
+        <button class="logout-button" onclick="handleLogout()">Logout</button>
+    </div>
+</body>
+</html>

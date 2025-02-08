@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Pixlet</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .register-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px; /* Ensure the container has a fixed width */
+            text-align: center; /* Center align text inside the container */
+        }
+        .register-container h2 {
+            margin-bottom: 20px;
+            font-size: 18px; /* Adjust font size to fit within the container */
+        }
+        .register-container input {
+            display: block;
+            width: calc(100% - 20px); /* Adjust width to fit within the container */
+            padding: 10px;
+            margin: 10px auto; /* Center the input fields */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .register-container button {
+            width: calc(100% - 20px); /* Adjust width to fit within the container */
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px auto; /* Center the button */
+        }
+        .register-container button:hover {
+            background-color: #0056b3;
+        }
+        .error-message, .success-message {
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        function handleRegister(event) {
+            event.preventDefault();
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            const confirmPassword = document.querySelector('input[name="confirm-password"]').value;
+
+            if (password !== confirmPassword) {
+                document.getElementById('error-message').textContent = 'As senhas não coincidem.';
+                return;
+            }
+
+            if (localStorage.getItem(username)) {
+                document.getElementById('error-message').textContent = 'Nome de usuário já existe.';
+                return;
+            }
+
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+            localStorage.setItem(username, hashedPassword);
+            document.getElementById('success-message').textContent = 'Conta criada com sucesso. A redirecionar para o login...';
+            document.getElementById('error-message').textContent = '';
+
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 3000);
+        }
+    </script>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register - Pixlet</h2>
+        <form onsubmit="handleRegister(event)">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+    </div>
+</body>
+</html>

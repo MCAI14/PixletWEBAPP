@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Store</title>
+    <style>
+        body {
+            background-color: rgb(26, 125, 223);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        h1, h3 {
+            color: white;
+            text-align: center;
+        }
+        a {
+            color: white;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('loggedInUser');
+            if (!username) {
+                window.location.href = '../login.html';
+            }
+        });
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            const storedHashedPassword = localStorage.getItem(username);
+            const hashedPassword = CryptoJS.SHA256(password).toString();
+
+            if (storedHashedPassword === hashedPassword) {
+                localStorage.setItem('loggedInUser', username);
+                window.location.href = 'index.html'; // Redireciona para a loja
+            } else {
+                document.getElementById('error-message').textContent = 'Nome de usuário ou senha incorretos.';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Bem vindo ao site oficial de Aplicações Gratuitas da Pixel</h1>
+    <h3>Temos Aplicações de todos os tipos, desde jogos a aplicações de produtividade!</h3>
+    <a href="QuizzesEducativos.html">Quizzes Educativos</a>
+</body>
+</html>

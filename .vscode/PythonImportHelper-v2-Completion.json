@@ -1,0 +1,74 @@
+[
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "webbrowser",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "webbrowser",
+        "description": "webbrowser",
+        "detail": "webbrowser",
+        "documentation": {}
+    },
+    {
+        "label": "name",
+        "kind": 5,
+        "importPath": "PixelApps.HGP1",
+        "description": "PixelApps.HGP1",
+        "peekOfCode": "name = input(\"Mas, primeiro, vou precisar de saber o teu nome! Por favor escreve-o aqui: \")\nprint(f\"Vamos começar, {name}!\")\n# Pergunta 1\nask = input(\"Pergunta 1: Qual é a capital de Portugal? \\nA) Lisboa \\nB) Porto \\nC) Coimbra \\nD) Faro \\nEscreve a letra da resposta correta: \")\nif ask == \"A\" or ask == \"a\":\n    print(\"Parabéns! Acertaste!\")\n    score = 1  \nelse:\n    print(\"Resposta errada! A resposta correta é A) Lisboa.\")\n# Pergunta 2",
+        "detail": "PixelApps.HGP1",
+        "documentation": {}
+    },
+    {
+        "label": "ask",
+        "kind": 5,
+        "importPath": "PixelApps.HGP1",
+        "description": "PixelApps.HGP1",
+        "peekOfCode": "ask = input(\"Pergunta 1: Qual é a capital de Portugal? \\nA) Lisboa \\nB) Porto \\nC) Coimbra \\nD) Faro \\nEscreve a letra da resposta correta: \")\nif ask == \"A\" or ask == \"a\":\n    print(\"Parabéns! Acertaste!\")\n    score = 1  \nelse:\n    print(\"Resposta errada! A resposta correta é A) Lisboa.\")\n# Pergunta 2\nask = input(\"Pergunta 2: Qual a ordem de ancontecimentos no terramoto de 1755? \\nA) Um terramoto, um tsunami e um incêndio. \\nB) Um terramoto, um incêndio e um tsunami. \\nC) Um tsunami, um terramoto e um incêndio. \\nD) Um incêndio, um tsunami e um terramoto. \\nEscreve a letra da resposta correta: \")\nif ask == \"B\" or ask == \"b\":\n    print(\"Parabéns! Acertaste!\")",
+        "detail": "PixelApps.HGP1",
+        "documentation": {}
+    },
+    {
+        "label": "ask",
+        "kind": 5,
+        "importPath": "PixelApps.HGP1",
+        "description": "PixelApps.HGP1",
+        "peekOfCode": "ask = input(\"Pergunta 2: Qual a ordem de ancontecimentos no terramoto de 1755? \\nA) Um terramoto, um tsunami e um incêndio. \\nB) Um terramoto, um incêndio e um tsunami. \\nC) Um tsunami, um terramoto e um incêndio. \\nD) Um incêndio, um tsunami e um terramoto. \\nEscreve a letra da resposta correta: \")\nif ask == \"B\" or ask == \"b\":\n    print(\"Parabéns! Acertaste!\")\n    score += 1\nelse:\n    print(\"Resposta errada! A resposta correta é B) Um terramoto, um incêndio e um tsunami.\")\n# Pergunta 3\nask = input(\"Pergunta 3: Quem foi o rei que reconstruiu Lisboa após o terramoto de 1755? \\nA) D. José I \\nB) D. João V \\nC) D. João VI \\nD) D. João I \\nEscreve a letra da resposta correta: \")\nif ask == \"A\" or ask == \"a\":\n    print(\"Parabéns! Acertaste!\")",
+        "detail": "PixelApps.HGP1",
+        "documentation": {}
+    },
+    {
+        "label": "ask",
+        "kind": 5,
+        "importPath": "PixelApps.HGP1",
+        "description": "PixelApps.HGP1",
+        "peekOfCode": "ask = input(\"Pergunta 3: Quem foi o rei que reconstruiu Lisboa após o terramoto de 1755? \\nA) D. José I \\nB) D. João V \\nC) D. João VI \\nD) D. João I \\nEscreve a letra da resposta correta: \")\nif ask == \"A\" or ask == \"a\":\n    print(\"Parabéns! Acertaste!\")\n    score += 1\nelse:  \n    print(\"Resposta errada! A resposta correta é A) D. José I.\")\n# Pergunta 4\nask = input(\"Pergunta 4: Qual era o cognome de D. João V? \\nA) O Conquistador \\nB) O Venturoso \\nC) O Magnânimo \\nD) O Prudente \\nEscreve a letra da resposta correta: \")\nif ask == \"C\" or ask == \"c\":\n    print(\"Parabéns! Acertaste!\")",
+        "detail": "PixelApps.HGP1",
+        "documentation": {}
+    },
+    {
+        "label": "ask",
+        "kind": 5,
+        "importPath": "PixelApps.HGP1",
+        "description": "PixelApps.HGP1",
+        "peekOfCode": "ask = input(\"Pergunta 4: Qual era o cognome de D. João V? \\nA) O Conquistador \\nB) O Venturoso \\nC) O Magnânimo \\nD) O Prudente \\nEscreve a letra da resposta correta: \")\nif ask == \"C\" or ask == \"c\":\n    print(\"Parabéns! Acertaste!\")\n    score += 1\nelse:\n    print(\"Resposta errada! A resposta correta é C) O Magnânimo.\")\n# Thanks the player for playing and shows the score\nprint(f\"Obrigado por jogares, {name}! O teu resultado final é {score} em 4 perguntas.\")\nprint(\"Espero que te tenhas divertido a jogar o meu quizz! Podes ver mais no meu site. Até à próxima!\")\nprint(\"Espera 30 segundos para o jogo fechar automaticamente.\")",
+        "detail": "PixelApps.HGP1",
+        "documentation": {}
+    },
+    {
+        "label": "url",
+        "kind": 5,
+        "importPath": "PixelApps.K Runner",
+        "description": "PixelApps.K Runner",
+        "peekOfCode": "url = \"https://www.msn.com/pt-pt/noticias\"\n# Abre o navegador padrão e redireciona para a URL\nwebbrowser.open(url)\n# Mantém a janela aberta até que o usuário pressione Enter\ninput(\"Pressiona Enter para sair...\")",
+        "detail": "PixelApps.K Runner",
+        "documentation": {}
+    }
+]

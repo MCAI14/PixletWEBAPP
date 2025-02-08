@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Users - Pixlet</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .users-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px; /* Ensure the container has a fixed width */
+            text-align: center; /* Center align text inside the container */
+        }
+        .users-container h2 {
+            margin-bottom: 20px;
+            font-size: 18px; /* Adjust font size to fit within the container */
+        }
+        .user {
+            margin-bottom: 10px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="users-container">
+        <h2>Registered Users</h2>
+        <div id="users-list"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usersList = document.getElementById('users-list');
+            Object.keys(localStorage).forEach(key => {
+                if (key !== 'loggedInUser') {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    userDiv.textContent = `Username: ${key}, Password: ${localStorage.getItem(key)}`;
+                    usersList.appendChild(userDiv);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
