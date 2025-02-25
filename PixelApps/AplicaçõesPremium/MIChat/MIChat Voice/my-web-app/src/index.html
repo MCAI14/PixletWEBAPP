@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MIChat Voice - A voice calling application">
+    <meta name="keywords" content="MIChat, Voice, Call, Communication">
+    <meta name="author" content="MIChat Team">
     <title>MIChat Voice</title>
     <link rel="stylesheet" href="styles/styles.css">
 </head>
@@ -10,14 +13,47 @@
     <header>
         <h1>MIChat Voice</h1>
     </header>
-    <div class="container">
-        <button id="startCall">Start Call</button>
-        <button id="endCall">End Call</button>
-        <audio id="remoteAudio" autoplay></audio>
-    </div>
+    <main class="container">
+        <div id="transcription" class="transcription"></div>
+        <button id="startCall" class="btn">Start Call</button>
+        <button id="endCall" class="btn">End Call</button>
+        <audio id="remoteAudio" autoplay aria-label="Remote Audio"></audio>
+    </main>
     <footer>
         <p>&copy; 2025 MIChat Voice</p>
     </footer>
     <script src="scripts/app.js"></script>
+    <script>
+        // Verificar se o navegador suporta a API de Reconhecimento de Fala
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                const transcriptionDiv = document.getElementById('transcription');
+                transcriptionDiv.innerHTML = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    transcriptionDiv.innerHTML += transcript + '<br>';
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error detected: ' + event.error);
+            };
+
+            recognition.onend = () => {
+                console.log('Speech recognition service disconnected');
+            };
+
+            // Iniciar o reconhecimento de fala quando a página carregar
+            recognition.start();
+        } else {
+            console.error('Speech recognition not supported in this browser');
+        }
+    </script>
 </body>
 </html>
