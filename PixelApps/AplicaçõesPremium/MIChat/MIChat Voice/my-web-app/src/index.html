@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +30,7 @@
             const recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = 'en-US';
+            recognition.lang = 'pt-PT'; // Definir o idioma para português de Portugal
 
             recognition.onresult = (event) => {
                 const transcriptionDiv = document.getElementById('transcription');
@@ -42,17 +42,17 @@
             };
 
             recognition.onerror = (event) => {
-                console.error('Speech recognition error detected: ' + event.error);
+                console.error('Erro no reconhecimento de fala: ' + event.error);
             };
 
             recognition.onend = () => {
-                console.log('Speech recognition service disconnected');
+                console.log('Serviço de reconhecimento de fala desconectado');
             };
 
             // Iniciar o reconhecimento de fala quando a página carregar
             recognition.start();
         } else {
-            console.error('Speech recognition not supported in this browser');
+            console.error('Reconhecimento de fala não suportado neste navegador');
         }
     </script>
 </body>
