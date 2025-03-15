@@ -73,30 +73,42 @@
         endCallButton.addEventListener('click', endCall);
 
         async function startCall() {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            localVideo.srcObject = localStream;
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localVideo.srcObject = localStream;
 
-            peerConnection = new RTCPeerConnection(configuration);
-            peerConnection.addStream(localStream);
+                peerConnection = new RTCPeerConnection(configuration);
+                peerConnection.addStream(localStream);
 
-            peerConnection.onaddstream = (event) => {
-                remoteVideo.srcObject = event.stream;
-            };
+                peerConnection.onaddstream = (event) => {
+                    remoteVideo.srcObject = event.stream;
+                };
 
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    // Enviar o candidato ICE para o outro peer
-                }
-            };
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        // Enviar o candidato ICE para o outro peer
+                    }
+                };
 
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
 
-            // Enviar a oferta para o outro peer
+                // Enviar a oferta para o outro peer
+            } catch (error) {
+                console.error('Erro ao acessar a câmera e o microfone:', error);
+                alert('Erro ao acessar a câmera e o microfone. Verifique as permissões e tente novamente.');
+            }
         }
 
         function endCall() {
-            peerConnection.close();
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
             localVideo.srcObject = null;
             remoteVideo.srcObject = null;
         }
