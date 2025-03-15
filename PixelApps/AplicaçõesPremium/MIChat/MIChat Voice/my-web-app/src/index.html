@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MIChat Voice - A voice calling application">
+    <meta name="description" content="MIChat - A voice calling application">
     <meta name="keywords" content="MIChat, Voice, Call, Communication">
     <meta name="author" content="MIChat Team">
-    <title>MIChat Voice</title>
+    <title>MIChat</title>
     <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
     <header>
-        <h1>MIChat Voice</h1>
+        <h1>MIChat</h1>
     </header>
     <main class="container">
         <div id="transcription" class="transcription"></div>
-        <video id="localVideo" autoplay muted></video>
-        <video id="remoteVideo" autoplay></video>
-        <button id="startCall" class="btn">Start Call</button>
-        <button id="endCall" class="btn">End Call</button>
+        <div class="chat-container">
+            <div id="messages" class="messages"></div>
+            <input type="text" id="messageInput" placeholder="Type a message">
+            <button id="sendMessage" class="btn">Send</button>
+        </div>
     </main>
     <footer>
     </footer>
@@ -55,62 +56,31 @@
             console.error('Reconhecimento de fala não suportado neste navegador');
         }
 
-        // Configurar WebRTC
-        const localVideo = document.getElementById('localVideo');
-        const remoteVideo = document.getElementById('remoteVideo');
-        const startCallButton = document.getElementById('startCall');
-        const endCallButton = document.getElementById('endCall');
-        let localStream;
-        let peerConnection;
-        const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
+        // Configurar WebSocket
+        const socket = new WebSocket('ws://localhost:8080');
+        const sendMessageButton = document.getElementById('sendMessage');
+        const messageInput = document.getElementById('messageInput');
+        const messagesDiv = document.getElementById('messages');
+
+        sendMessageButton.addEventListener('click', sendMessage);
+
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message) {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                messagesDiv.appendChild(messageElement);
+                messageInput.value = '';
+                // Enviar a mensagem para o outro peer via WebSocket
+                socket.send(message);
+            }
+        }
+
+        socket.onmessage = (event) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = event.data;
+            messagesDiv.appendChild(messageElement);
         };
-
-        startCallButton.addEventListener('click', startCall);
-        endCallButton.addEventListener('click', endCall);
-
-        async function startCall() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                localVideo.srcObject = localStream;
-
-                peerConnection = new RTCPeerConnection(configuration);
-                peerConnection.addStream(localStream);
-
-                peerConnection.onaddstream = (event) => {
-                    remoteVideo.srcObject = event.stream;
-                };
-
-                peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        // Enviar o candidato ICE para o outro peer
-                    }
-                };
-
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
-                // Enviar a oferta para o outro peer
-            } catch (error) {
-                console.error('Erro ao acessar a câmera e o microfone:', error);
-                alert('Erro ao acessar a câmera e o microfone. Verifique as permissões e tente novamente.');
-            }
-        }
-
-        function endCall() {
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            localVideo.srcObject = null;
-            remoteVideo.srcObject = null;
-        }
     </script>
 </body>
 </html>
