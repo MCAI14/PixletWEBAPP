@@ -15,9 +15,10 @@
     </header>
     <main class="container">
         <div id="transcription" class="transcription"></div>
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
         <button id="startCall" class="btn">Start Call</button>
         <button id="endCall" class="btn">End Call</button>
-        <audio id="remoteAudio" autoplay aria-label="Remote Audio"></audio>
     </main>
     <footer>
         <p>&copy; 2025 MIChat Voice</p>
@@ -53,6 +54,51 @@
             recognition.start();
         } else {
             console.error('Reconhecimento de fala não suportado neste navegador');
+        }
+
+        // Configurar WebRTC
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const startCallButton = document.getElementById('startCall');
+        const endCallButton = document.getElementById('endCall');
+        let localStream;
+        let peerConnection;
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' }
+            ]
+        };
+
+        startCallButton.addEventListener('click', startCall);
+        endCallButton.addEventListener('click', endCall);
+
+        async function startCall() {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(configuration);
+            peerConnection.addStream(localStream);
+
+            peerConnection.onaddstream = (event) => {
+                remoteVideo.srcObject = event.stream;
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    // Enviar o candidato ICE para o outro peer
+                }
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            // Enviar a oferta para o outro peer
+        }
+
+        function endCall() {
+            peerConnection.close();
+            localVideo.srcObject = null;
+            remoteVideo.srcObject = null;
         }
     </script>
 </body>
