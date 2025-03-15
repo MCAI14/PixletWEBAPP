@@ -24,30 +24,6 @@
             margin-top: 10px;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const username = localStorage.getItem('loggedInUser');
-            if (!username) {
-                window.location.href = '../login.html';
-            }
-        });
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            const storedHashedPassword = localStorage.getItem(username);
-            const hashedPassword = CryptoJS.SHA256(password).toString();
-
-            if (storedHashedPassword === hashedPassword) {
-                localStorage.setItem('loggedInUser', username);
-                window.location.href = 'index.html'; // Redireciona para a loja
-            } else {
-                document.getElementById('error-message').textContent = 'Nome de usuário ou senha incorretos.';
-            }
-        }
-    </script>
 </head>
 <body>
     <h1>Bem vindo ao site oficial de Aplicações Gratuitas da Pixel</h1>
