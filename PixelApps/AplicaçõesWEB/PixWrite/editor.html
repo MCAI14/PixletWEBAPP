@@ -42,7 +42,7 @@
 
         function salvarTexto() {
             const conteudo = document.getElementById("editor").innerHTML;
-            fetch('/salvar', {
+            fetch('/.netlify/functions/salvar', { // endpoint atualizado para a Netlify Function
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
