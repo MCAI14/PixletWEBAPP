@@ -33,16 +33,17 @@ echo oLink.Save >> %SCRIPT%
 cscript /nologo %SCRIPT%
 del %SCRIPT%
 
-echo Verificando arquivo JAR...
-if not exist "%~dp0file-converter-1.0-SNAPSHOT-jar-with-dependencies.jar" (
-    echo ERRO: Arquivo JAR nao encontrado!
-    echo Verifique se o arquivo file-converter-1.0-SNAPSHOT-jar-with-dependencies.jar esta presente no diretorio.
+echo Compilando e executando o programa...
+javac "%~dp0FileConverter.java"
+if %ERRORLEVEL% NEQ 0 (
+    echo ERRO: Falha ao compilar o programa.
+    echo Verifique se o JDK esta instalado corretamente.
     pause
     exit /b 1
 )
 
-echo Iniciando o conversor de arquivos...
-java -jar "%~dp0file-converter-1.0-SNAPSHOT-jar-with-dependencies.jar"
+echo Iniciando o programa...
+java -cp "%~dp0" PixelConverts.FileConverter
 if %ERRORLEVEL% NEQ 0 (
     echo ERRO: Falha ao executar o programa.
     echo Verifique se o Java esta instalado corretamente.
