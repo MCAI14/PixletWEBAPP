@@ -5,7 +5,7 @@ setlocal
 echo Iniciando o conversor...
 
 REM Verifica se FileConverter.class existe no diretório PixelConverts
-if not exist "%~dp0PixelConverts\FileConverter.class" (
+if not exist "%~dp0FileConverter.class" (
     echo Arquivo FileConverter.class nao encontrado.
     echo Compilando FileConverter.java...
     javac "%~dp0PixelConverts\FileConverter.java"
