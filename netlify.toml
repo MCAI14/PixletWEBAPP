@@ -1,0 +1,3 @@
+[build]
+  functions = "netlify/functions"
+  publish = "PIXLETWEBAPP"  # ajuste para o diretório publicado do seu projeto
