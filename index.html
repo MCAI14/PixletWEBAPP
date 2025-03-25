@@ -83,7 +83,6 @@
             searchForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const query = document.querySelector('.search-bar').value;
-                // Alteração aqui: usar a chave global 'searchPreference'
                 const searchPreference = localStorage.getItem('searchPreference') || 'google';
                 let searchUrl;
 
@@ -93,6 +92,9 @@
                         break;
                     case 'duckduckgo':
                         searchUrl = `https://duckduckgo.com/?q=${query}`;
+                        break;
+                    case 'pixlet':
+                        searchUrl = `search-results.html?q=${encodeURIComponent(query)}`;
                         break;
                     case 'google':
                     default:
