@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switch Web Searcher</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .account-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px; /* Container com largura fixa */
+        }
+        .account-container h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .account-container p {
+            margin-bottom: 10px;
+        }
+        .logout-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .logout-button:hover {
+            background-color: #0056b3;
+        }
+        .search-preference {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Removemos a verificação de login.
+            const searchPreference = localStorage.getItem('searchPreference');
+            if (searchPreference) {
+                document.querySelector(`input[name="search-engine"][value="${searchPreference}"]`).checked = true;
+            }
+        });
+
+        // Função de logout mantida, mas sem necessidade de login.
+        function handleLogout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+
+        function saveSearchPreference(event) {
+            event.preventDefault();
+            const searchPreference = document.querySelector('input[name="search-engine"]:checked').value;
+            localStorage.setItem('searchPreference', searchPreference);
+            alert('Preferência de pesquisa salva com sucesso!');
+            window.location.href = 'index.html'; // Redireciona para index.html após salvar
+        }
+    </script>
+</head>
+<body>
+    <div class="account-container">
+        <h2>Mudar o Mecanismo de Pesquisa</h2>
+        <!-- Removido o elemento que exibia o nome do usuário -->
+        <form class="search-preference" onsubmit="saveSearchPreference(event)">
+            <h3>Escolha o seu mecanismo de pesquisa preferido:</h3>
+            <label>
+                <input type="radio" name="search-engine" value="google" required> Google
+            </label><br>
+            <label>
+                <input type="radio" name="search-engine" value="bing"> Bing
+            </label><br>
+            <label>
+                <input type="radio" name="search-engine" value="duckduckgo"> DuckDuckGo
+            </label><br>
+            <button type="submit">Salvar Preferência</button>
+        </form>
+    </div>
+</body>
+</html>

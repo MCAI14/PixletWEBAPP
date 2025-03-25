@@ -83,7 +83,8 @@
             searchForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const query = document.querySelector('.search-bar').value;
-                const searchPreference = localStorage.getItem(`${username}_searchPreference`) || 'google';
+                // Alteração aqui: usar a chave global 'searchPreference'
+                const searchPreference = localStorage.getItem('searchPreference') || 'google';
                 let searchUrl;
 
                 switch (searchPreference) {
@@ -122,6 +123,9 @@
             <input type="text" name="q" class="search-bar" placeholder="Search...">
             <input type="submit" value="Search">
         </form>
+        <div class="switch-search-motor" style="margin-top: 10px; text-align: center;">
+            <a href="SwitchWebSearcher.html">Switch Search Motor</a>
+        </div>
     </div>
     <div class="login-button-container">
         <button class="login-button">Login</button>
