@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixlet Search Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f8f9fa;
+    }
+    header {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    header h1 {
+      font-size: 32px;
+      color: #4285F4;
+    }
+    #query {
+      width: 50%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .result {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .result a {
+      color: #1a0dab;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .result a:hover {
+      text-decoration: underline;
+    }
+    .result p {
+      color: #545454;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pixlet</h1>
+    <input type="text" id="query" placeholder="Search..." value="">
+    <button onclick="searchAgain()">Search</button>
+  </header>
+  <div id="results">
+    <!-- Os resultados serão inseridos aqui -->
+  </div>
+  <script>
+    // Recupera o parâmetro "q" da URL
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('q') || "";
+    document.getElementById('query').value = query;
+  
+    // Dados estáticos para simulação de resultados
+    const data = [
+      { title: "Página Inicial - Pixlet", url: "index.html", snippet: "Bem-vindo ao site oficial Pixlet." },
+      { title: "PixWrite Editor", url: "PixelApps/AplicaçõesWEB/PixWrite/editor.html", snippet: "Crie e edite seus textos com o editor PixWrite." },
+      { title: "Quizzes Educativos", url: "PixelApps/QuizzesEducativos.html", snippet: "Teste seus conhecimentos com nossos quizzes." },
+      { title: "Jogos", url: "PixelApps/Jogos.html", snippet: "Explore os jogos disponíveis no Pixlet." }
+    ];
+  
+    const resultsContainer = document.getElementById('results');
+  
+    // Função simulada que retorna 1000 resultados do Google
+    async function fetchGoogleResults(query) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const googleResults = [];
+          for (let i = 1; i <= 1000; i++) {
+            googleResults.push({
+              title: "Resultado Google " + i,
+              url: "https://www.google.com/search?q=" + encodeURIComponent(query) + "&i=" + i,
+              snippet: "Descrição do resultado Google " + i + "."
+            });
+          }
+          resolve(googleResults);
+        }, 500);
+      });
+    }
+  
+    // Função para embaralhar um array
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+  
+    // Função que mescla os resultados estáticos com os resultados do Google
+    async function showCombinedResults(query) {
+      const staticResults = data.filter(item =>
+        item.title.toLowerCase().includes(query.toLowerCase()) ||
+        item.snippet.toLowerCase().includes(query.toLowerCase())
+      );
+  
+      const googleResults = await fetchGoogleResults(query);
+      // Mescla os dois arrays
+      const combinedResults = staticResults.concat(googleResults);
+      // Embaralha os resultados para "misturá-los"
+      const mixedResults = shuffleArray(combinedResults);
+  
+      resultsContainer.innerHTML = "";
+  
+      if (mixedResults.length === 0) {
+        resultsContainer.innerHTML = `<p>Nenhum resultado encontrado para "${query}".</p>`;
+      } else {
+        mixedResults.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'result';
+          // Se for resultado do Google, remove target="_blank" para redirecionar na mesma aba.
+          const isGoogleResult = item.title.startsWith("Resultado Google");
+          const targetAttr = isGoogleResult ? 'target="_self"' : 'target="_blank"';
+          div.innerHTML = `
+            <a href="${item.url}" ${targetAttr}>${item.title}</a>
+            <p>${item.snippet}</p>
+          `;
+          resultsContainer.appendChild(div);
+        });
+      }
+    }
+  
+    // Exibe todos os resultados combinados
+    showCombinedResults(query);
+  
+    function searchAgain() {
+      const newQuery = document.getElementById('query').value;
+      window.location.href = "search-results.html?q=" + encodeURIComponent(newQuery);
+    }
+  </script>
+</body>
+</html>
