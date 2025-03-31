@@ -18,15 +18,29 @@ public class Worker : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Mensagem inicial para indicar que o assistente está ativo
+        FalarTexto("Paixel ativado. Diga 'Paixel' seguido do comando.");
+
         while (!stoppingToken.IsCancellationRequested)
         {
             string comando = CapturarAudio();
-            if (!string.IsNullOrEmpty(comando))
+            // Verifica se o comando contém a palavra de ativação "paixel"
+            if (!string.IsNullOrEmpty(comando) && comando.IndexOf("paixel", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                Console.WriteLine($"Comando reconhecido: {comando}");
-                string resposta = await ProcessarTexto(comando);
-                Console.WriteLine($"Resposta obtida: {resposta}");
-                FalarTexto(resposta);
+                // Remove a palavra "paixel" para isolar o comando real
+                comando = comando.Replace("paixel", "", StringComparison.OrdinalIgnoreCase).Trim();
+                
+                if (string.IsNullOrEmpty(comando))
+                {
+                    FalarTexto("Como posso ajudar?");
+                }
+                else
+                {
+                    Console.WriteLine($"Comando reconhecido: {comando}");
+                    string resposta = await ProcessarTexto(comando);
+                    Console.WriteLine($"Resposta obtida: {resposta}");
+                    FalarTexto(resposta);
+                }
             }
             await Task.Delay(1000, stoppingToken);
         }
