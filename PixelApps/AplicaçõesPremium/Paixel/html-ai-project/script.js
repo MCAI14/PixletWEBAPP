@@ -162,13 +162,23 @@ const submitButton = document.getElementById('submit-button');
 const chatForm = document.getElementById('chat-input-bar');
 
 // Função para adicionar mensagem ao chat
-function addMessage(text, sender = 'user') {
+function addMessage(text, sender = 'user', source = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${sender}`;
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
     bubble.textContent = text;
     msgDiv.appendChild(bubble);
+
+    // Só mostra a fonte se o usuário pedir
+    if (source && window.showSourceNext) {
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `Fonte: ${source}`;
+        msgDiv.appendChild(meta);
+        window.showSourceNext = false; // Reseta o flag
+    }
+
     chatContainer.appendChild(msgDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
@@ -177,8 +187,18 @@ function addMessage(text, sender = 'user') {
 async function getAIResponse(question) {
     let knowledgeBase = getKnowledgeBase();
 
+    // Cumprimentos/despedidas...
+
     if (knowledgeBase[question]) {
-        return knowledgeBase[question] + " (memória)";
+        return { text: knowledgeBase[question], source: "memória" };
+    }
+
+    // Tenta aimlapi
+    const aimlReply = await fetchAimlApi(question);
+    if (aimlReply) {
+        knowledgeBase[question] = aimlReply;
+        saveKnowledgeBase(knowledgeBase);
+        return { text: aimlReply, source: "aimlapi" };
     }
 
     // Piada
@@ -187,7 +207,7 @@ async function getAIResponse(question) {
         if (joke) {
             knowledgeBase[question] = joke + " (JokeAPI)";
             saveKnowledgeBase(knowledgeBase);
-            return joke + " (JokeAPI)";
+            return { text: joke, source: "JokeAPI" };
         }
     }
 
@@ -197,7 +217,7 @@ async function getAIResponse(question) {
         if (advice) {
             knowledgeBase[question] = advice + " (AdviceAPI)";
             saveKnowledgeBase(knowledgeBase);
-            return advice + " (AdviceAPI)";
+            return { text: advice, source: "AdviceAPI" };
         }
     }
 
@@ -206,7 +226,7 @@ async function getAIResponse(question) {
     if (weather) {
         knowledgeBase[question] = weather + " (Open-Meteo)";
         saveKnowledgeBase(knowledgeBase);
-        return weather + " (Open-Meteo)";
+        return { text: weather, source: "Open-Meteo" };
     }
 
     // Curiosidade sobre número
@@ -214,7 +234,7 @@ async function getAIResponse(question) {
     if (numberFact) {
         knowledgeBase[question] = numberFact + " (NumbersAPI)";
         saveKnowledgeBase(knowledgeBase);
-        return numberFact + " (NumbersAPI)";
+        return { text: numberFact, source: "NumbersAPI" };
     }
 
     // DuckDuckGo
@@ -222,7 +242,7 @@ async function getAIResponse(question) {
     if (ddg) {
         knowledgeBase[question] = ddg + " (DuckDuckGo)";
         saveKnowledgeBase(knowledgeBase);
-        return ddg + " (DuckDuckGo)";
+        return { text: ddg, source: "DuckDuckGo" };
     }
 
     // Wikipedia
@@ -230,7 +250,7 @@ async function getAIResponse(question) {
     if (wiki) {
         knowledgeBase[question] = wiki + " (Wikipedia)";
         saveKnowledgeBase(knowledgeBase);
-        return wiki + " (Wikipedia)";
+        return { text: wiki, source: "Wikipedia" };
     }
 
     // Wiktionary
@@ -238,11 +258,11 @@ async function getAIResponse(question) {
     if (wikt) {
         knowledgeBase[question] = wikt + " (Wiktionary)";
         saveKnowledgeBase(knowledgeBase);
-        return wikt + " (Wiktionary)";
+        return { text: wikt, source: "Wiktionary" };
     }
 
     // Se não encontrou, pede para o usuário ensinar
-    return "Não encontrei resposta. Pode me ensinar?";
+    return { text: "Não encontrei resposta. Pode me ensinar?", source: null };
 }
 
 // Evento de envio do formulário
@@ -250,13 +270,22 @@ chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userText = inputField.value.trim();
     if (!userText) return;
+
+    // Se o usuário digitar "/fonte", ativa o flag para mostrar a fonte na próxima resposta
+    if (userText.toLowerCase() === "/fonte") {
+        window.showSourceNext = true;
+        addMessage("A fonte será mostrada na próxima resposta da IA.", 'ai');
+        inputField.value = '';
+        return;
+    }
+
     addMessage(userText, 'user');
     inputField.value = '';
     submitButton.disabled = true;
 
     // Resposta da IA
-    const aiText = await getAIResponse(userText);
-    addMessage(aiText, 'ai');
+    const aiObj = await getAIResponse(userText);
+    addMessage(aiObj.text, 'ai', aiObj.source);
     submitButton.disabled = false;
     inputField.focus();
 });
@@ -381,3 +410,26 @@ document.getElementById('submit-button').addEventListener('click', async functio
     inputField.addEventListener('keydown', onEnter);
     document.getElementById('submit-button').onclick = learnAnswer;
 });
+
+async function fetchAimlApi(question) {
+    try {
+        const response = await fetch("https://api.aimlapi.com/api/v1/prompt", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-KEY": "c0c4affc7b144dc78a5c51c98b3531f5"
+            },
+            body: JSON.stringify({
+                prompt: question,
+                // Adicione outros parâmetros se a documentação pedir
+            })
+        });
+        const data = await response.json();
+        if (data && data.completion) {
+            return data.completion.trim();
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
