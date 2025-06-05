@@ -156,6 +156,114 @@ async function fetchWeather(query) {
     }
 }
 
+const chatContainer = document.getElementById('chat-container');
+const inputField = document.getElementById('input-field');
+const submitButton = document.getElementById('submit-button');
+const chatForm = document.getElementById('chat-input-bar');
+
+// Função para adicionar mensagem ao chat
+function addMessage(text, sender = 'user') {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    msgDiv.appendChild(bubble);
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Função para resposta da IA (exemplo simples, substitua pela sua lógica)
+async function getAIResponse(question) {
+    let knowledgeBase = getKnowledgeBase();
+
+    if (knowledgeBase[question]) {
+        return knowledgeBase[question] + " (memória)";
+    }
+
+    // Piada
+    if (/piada|engraçado|conta.*uma/.test(question)) {
+        const joke = await fetchJoke();
+        if (joke) {
+            knowledgeBase[question] = joke + " (JokeAPI)";
+            saveKnowledgeBase(knowledgeBase);
+            return joke + " (JokeAPI)";
+        }
+    }
+
+    // Conselho
+    if (/conselho|diz.*algo|preciso.*dica/.test(question)) {
+        const advice = await fetchAdvice();
+        if (advice) {
+            knowledgeBase[question] = advice + " (AdviceAPI)";
+            saveKnowledgeBase(knowledgeBase);
+            return advice + " (AdviceAPI)";
+        }
+    }
+
+    // Tempo/clima
+    const weather = await fetchWeather(question);
+    if (weather) {
+        knowledgeBase[question] = weather + " (Open-Meteo)";
+        saveKnowledgeBase(knowledgeBase);
+        return weather + " (Open-Meteo)";
+    }
+
+    // Curiosidade sobre número
+    const numberFact = await fetchNumbersAPI(question);
+    if (numberFact) {
+        knowledgeBase[question] = numberFact + " (NumbersAPI)";
+        saveKnowledgeBase(knowledgeBase);
+        return numberFact + " (NumbersAPI)";
+    }
+
+    // DuckDuckGo
+    const ddg = await fetchDuckDuckGoAnswer(question);
+    if (ddg) {
+        knowledgeBase[question] = ddg + " (DuckDuckGo)";
+        saveKnowledgeBase(knowledgeBase);
+        return ddg + " (DuckDuckGo)";
+    }
+
+    // Wikipedia
+    const wiki = await fetchWikipediaSummary(question);
+    if (wiki) {
+        knowledgeBase[question] = wiki + " (Wikipedia)";
+        saveKnowledgeBase(knowledgeBase);
+        return wiki + " (Wikipedia)";
+    }
+
+    // Wiktionary
+    const wikt = await fetchWiktionaryDefinition(question);
+    if (wikt) {
+        knowledgeBase[question] = wikt + " (Wiktionary)";
+        saveKnowledgeBase(knowledgeBase);
+        return wikt + " (Wiktionary)";
+    }
+
+    // Se não encontrou, pede para o usuário ensinar
+    return "Não encontrei resposta. Pode me ensinar?";
+}
+
+// Evento de envio do formulário
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userText = inputField.value.trim();
+    if (!userText) return;
+    addMessage(userText, 'user');
+    inputField.value = '';
+    submitButton.disabled = true;
+
+    // Resposta da IA
+    const aiText = await getAIResponse(userText);
+    addMessage(aiText, 'ai');
+    submitButton.disabled = false;
+    inputField.focus();
+});
+
+// Mensagem inicial
+addMessage("Olá! Como posso ajudar você hoje?", 'ai');
+
 document.getElementById('submit-button').addEventListener('click', async function() {
     const inputField = document.getElementById('input-field');
     const output = document.getElementById('response-output');

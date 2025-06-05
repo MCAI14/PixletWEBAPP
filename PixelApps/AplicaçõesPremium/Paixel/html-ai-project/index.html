@@ -1,26 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML AI Project</title>
+    <title>Paixel Chat</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Welcome to the HTML AI Project</h1>
+        <h1>Paixel</h1>
     </header>
-    <main>
-        <section id="user-input">
-            <h2>Interact with the AI</h2>
-            <input type="text" id="input-field" placeholder="Ask me anything...">
-            <button id="submit-button">Submit</button>
-        </section>
-        <section id="ai-response">
-            <h2>AI Response</h2>
-            <p id="response-output">The AI will respond here...</p>
-        </section>
+    <main id="chat-container">
+        <!-- Mensagens do chat serão inseridas aqui pelo JS -->
     </main>
+    <form id="chat-input-bar" autocomplete="off">
+        <input type="text" id="input-field" placeholder="Enviar mensagem à Paixel..." autocomplete="off" />
+        <button id="submit-button" type="submit">➤</button>
+    </form>
     <script src="script.js"></script>
 </body>
 </html>
