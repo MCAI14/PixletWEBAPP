@@ -178,161 +178,237 @@
         <input type="text" id="destino" placeholder="Destino para rota...">
         <button id="rota-btn">Rota</button>
         <button id="loc-btn" title="Minha localização">📍</button>
+        <button id="fav-btn" title="Guardar destino" style="display:none;">⭐</button>
+        <select id="fav-list" style="display:none;">
+            <option value="">Favoritos</option>
+        </select>
     </div>
-    <div class="side-buttons">
-        <button title="Rotas">🧭</button>
-        <button title="Tráfego">🚦</button>
-        <button title="Favoritos">⭐</button>
-    </div>
-    <div class="profile-btn" title="Conta">
-        <img src="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png" alt="Conta">
-    </div>
-    <div id="route-info">
+    <div id="route-info" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#fff;padding:16px 28px;border-radius:16px;box-shadow:0 2px 12px #0002;display:none;z-index:1001;font-size:18px;">
         <span id="route-summary"></span>
-        <button id="start-nav">Iniciar rota</button>
+        <button id="start-nav" style="margin-left:20px;padding:8px 18px;border-radius:8px;background:#007bff;color:#fff;border:none;font-size:16px;cursor:pointer;">Iniciar rota</button>
     </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        let routeLayer = null;
-        let startMarker = null;
-        let endMarker = null;
-        let selecting = false;
-        let step = 0;
-        let userLocation = null;
-        let routeCoords = [];
-        let routeInstructions = [];
-        let navIndex = 0;
+let routeLayer = null;
+let startMarker = null;
+let endMarker = null;
+let userMarker = null;
+let selecting = false;
+let step = 0;
+let userLocation = null;
+let routeCoords = [];
+let routeInstructions = [];
+let navIndex = 0;
+let watchId = null;
+let navigating = false;
 
-        // Inicializa o mapa centrado em Lisboa
-        const map = L.map('map').setView([38.7223, -9.1393], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+// Inicializa o mapa centrado em Lisboa
+const map = L.map('map').setView([38.7223, -9.1393], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
 
-        // Botão localização atual
-        document.getElementById('loc-btn').onclick = function() {
-            if (!navigator.geolocation) {
-                alert('Geolocalização não suportada!');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                userLocation = [lat, lon];
-                map.setView(userLocation, 16);
-                if (startMarker) map.removeLayer(startMarker);
-                startMarker = L.marker(userLocation, {title: "Você"}).addTo(map).bindPopup("Você está aqui!").openPopup();
-            }, function() {
-                alert('Não foi possível obter localização.');
-            });
-        };
+// Botão localização atual
+document.getElementById('loc-btn').onclick = function() {
+    if (!navigator.geolocation) {
+        alert('Geolocalização não suportada!');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        userLocation = [lat, lon];
+        map.setView(userLocation, 16);
+        if (userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker(userLocation, {title: "Você"}).addTo(map).bindPopup("Você está aqui!").openPopup();
+    }, function() {
+        alert('Não foi possível obter localização.');
+    });
+};
 
-        // Pesquisa de local
-        document.getElementById('search-btn').onclick = async function() {
-            const query = document.getElementById('search').value;
-            if (!query) return;
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-            const resp = await fetch(url);
-            const results = await resp.json();
-            if (results.length > 0) {
-                const { lat, lon, display_name } = results[0];
-                map.setView([lat, lon], 16);
-                L.marker([lat, lon]).addTo(map).bindPopup(display_name).openPopup();
+// Pesquisa de local
+document.getElementById('search-btn').onclick = async function() {
+    const query = document.getElementById('search').value;
+    if (!query) return;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    const resp = await fetch(url);
+    const results = await resp.json();
+    if (results.length > 0) {
+        const { lat, lon, display_name } = results[0];
+        map.setView([lat, lon], 16);
+        L.marker([lat, lon]).addTo(map).bindPopup(display_name).openPopup();
+    } else {
+        alert('Local não encontrado!');
+    }
+};
+
+// Calcular rota digitando destino
+document.getElementById('rota-btn').onclick = async function() {
+    const destino = document.getElementById('destino').value;
+    if (!destino) return alert('Digite o destino!');
+    if (!userLocation) return alert('Clique no botão 📍 para obter sua localização primeiro!');
+    // Geocoding do destino
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`;
+    const resp = await fetch(url);
+    const results = await resp.json();
+    if (results.length === 0) return alert('Destino não encontrado!');
+    const { lat, lon, display_name } = results[0];
+    if (endMarker) map.removeLayer(endMarker);
+    endMarker = L.marker([lat, lon], {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
+    getRoute(userLocation, [lat, lon], display_name);
+};
+
+// Função de rota com tempo/distância e instruções
+async function getRoute(start, end, destinoNome = "") {
+    const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62489768748efd974aebb5c3854e82a1a288&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    routeCoords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+    routeInstructions = data.features[0].properties.segments[0].steps;
+    const distance = data.features[0].properties.segments[0].distance; // em metros
+    const duration = data.features[0].properties.segments[0].duration; // em segundos
+
+    if (routeLayer) map.removeLayer(routeLayer);
+    routeLayer = L.polyline(routeCoords, {color: 'blue', weight: 6}).addTo(map);
+    map.fitBounds(routeLayer.getBounds());
+
+    document.getElementById('route-info').style.display = 'block';
+    document.getElementById('route-summary').innerHTML =
+        `Distância: ${(distance/1000).toFixed(1)} km &nbsp; | &nbsp; Tempo: ${Math.round(duration/60)} min`;
+    navIndex = 0;
+    navigating = false;
+    document.getElementById('start-nav').style.display = '';
+    // Mostra botão de favoritos
+    document.getElementById('fav-btn').style.display = '';
+    document.getElementById('fav-btn').onclick = function() {
+        addFavorito(destinoNome, end[0], end[1]);
+    };
+}
+
+// Botão iniciar navegação com seguimento em tempo real
+document.getElementById('start-nav').onclick = function() {
+    if (!routeInstructions.length) return;
+    navIndex = 0;
+    navigating = true;
+    document.getElementById('start-nav').style.display = 'none';
+    document.getElementById('fav-btn').style.display = 'none';
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+    watchId = navigator.geolocation.watchPosition(onPositionUpdate, function() {
+        alert('Não foi possível obter localização em tempo real.');
+    }, { enableHighAccuracy: true, maximumAge: 1000 });
+    alert('Navegação iniciada! O mapa vai seguir a sua posição.');
+};
+
+// Atualiza posição do utilizador e centra o mapa, com seta tipo Waze
+function onPositionUpdate(pos) {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    userLocation = [lat, lon];
+    if (userMarker) map.removeLayer(userMarker);
+    // Seta SVG tipo Waze
+    const arrowIcon = L.divIcon({
+        html: `<svg width="36" height="36" viewBox="0 0 36 36"><polygon points="18,4 32,32 18,26 4,32" fill="#007bff" stroke="#fff" stroke-width="2"/></svg>`,
+        className: '',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+    });
+    userMarker = L.marker(userLocation, {icon: arrowIcon, rotationAngle: 0}).addTo(map);
+    map.setView(userLocation, 17);
+
+    // Opcional: mostrar instrução atual (simples)
+    if (navIndex < routeInstructions.length) {
+        const step = routeInstructions[navIndex];
+        const stepLat = step.way_points ? routeCoords[step.way_points[0]][0] : null;
+        const stepLon = step.way_points ? routeCoords[step.way_points[0]][1] : null;
+        // Se estiver perto do próximo passo, avança
+        if (stepLat && stepLon && getDistance(lat, lon, stepLat, stepLon) < 0.05) { // 50 metros
+            navIndex++;
+            if (navIndex < routeInstructions.length) {
+                alert(routeInstructions[navIndex].instruction);
             } else {
-                alert('Local não encontrado!');
-            }
-        };
-
-        // Calcular rota digitando destino
-        document.getElementById('rota-btn').onclick = async function() {
-            const destino = document.getElementById('destino').value;
-            if (!destino) return alert('Digite o destino!');
-            if (!userLocation) return alert('Clique no botão 📍 para obter sua localização primeiro!');
-            // Geocoding do destino
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`;
-            const resp = await fetch(url);
-            const results = await resp.json();
-            if (results.length === 0) return alert('Destino não encontrado!');
-            const { lat, lon } = results[0];
-            if (endMarker) map.removeLayer(endMarker);
-            endMarker = L.marker([lat, lon], {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
-            getRoute(userLocation, [lat, lon]);
-        };
-
-        // Função de rota com tempo/distância e instruções
-        async function getRoute(start, end) {
-            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62489768748efd974aebb5c3854e82a1a288&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
-            const resp = await fetch(url);
-            const data = await resp.json();
-            routeCoords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            routeInstructions = data.features[0].properties.segments[0].steps;
-            const distance = data.features[0].properties.segments[0].distance; // em metros
-            const duration = data.features[0].properties.segments[0].duration; // em segundos
-
-            if (routeLayer) map.removeLayer(routeLayer);
-            routeLayer = L.polyline(routeCoords, {color: 'blue', weight: 6}).addTo(map);
-            map.fitBounds(routeLayer.getBounds());
-
-            // Mostra tempo e distância
-            document.getElementById('route-info').style.display = 'block';
-            document.getElementById('route-summary').innerHTML =
-                `Distância: ${(distance/1000).toFixed(1)} km &nbsp; | &nbsp; Tempo: ${Math.round(duration/60)} min`;
-            navIndex = 0;
-        }
-
-        // Botão iniciar navegação
-        document.getElementById('start-nav').onclick = function() {
-            if (!routeInstructions.length) return;
-            navIndex = 0;
-            showNextInstruction();
-        };
-
-        // Mostra instrução passo-a-passo (simples)
-        function showNextInstruction() {
-            if (navIndex >= routeInstructions.length) {
                 alert("Chegou ao destino!");
                 document.getElementById('route-info').style.display = 'none';
-                return;
-            }
-            const step = routeInstructions[navIndex];
-            const msg = `${step.instruction} (${(step.distance/1000).toFixed(2)} km)`;
-            alert(msg);
-            navIndex++;
-            // Pode avançar para o próximo passo automaticamente ou por botão
-            if (navIndex < routeInstructions.length) {
-                setTimeout(showNextInstruction, 3000); // Próxima instrução em 3s (simulação)
-            } else {
-                setTimeout(() => alert("Chegou ao destino!"), 2000);
+                navigator.geolocation.clearWatch(watchId);
+                navigating = false;
             }
         }
+    }
+}
 
-        // Seleção manual de pontos (continua igual)
-        document.querySelector('.side-buttons button[title="Rotas"]').onclick = function() {
-            alert('Clique no mapa para escolher o ponto de início da rota.');
-            selecting = true;
-            step = 1;
-            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
-            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
-            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
-            document.getElementById('route-info').style.display = 'none';
-        };
+// Função para calcular distância entre dois pontos (em km)
+function getDistance(lat1, lon1, lat2, lon2) {
+    function toRad(x) { return x * Math.PI / 180; }
+    const R = 6371; // km
+    const dLat = toRad(lat2-lat1);
+    const dLon = toRad(lon2-lon1);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
 
-        map.on('click', function(e) {
-            if (!selecting) return;
-            if (step === 1) {
-                if (startMarker) map.removeLayer(startMarker);
-                startMarker = L.marker(e.latlng, {title: "Início"}).addTo(map).bindPopup("Início").openPopup();
-                alert('Agora clique no mapa para escolher o destino.');
-                step = 2;
-            } else if (step === 2) {
-                if (endMarker) map.removeLayer(endMarker);
-                endMarker = L.marker(e.latlng, {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
-                getRoute([startMarker.getLatLng().lat, startMarker.getLatLng().lng], [endMarker.getLatLng().lat, endMarker.getLatLng().lng]);
-                selecting = false;
-                step = 0;
-            }
-        });
+// Favoritos: guardar e listar
+function addFavorito(nome, lat, lon) {
+    let favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
+    favs.push({nome, lat, lon});
+    localStorage.setItem('favoritos', JSON.stringify(favs));
+    alert('Destino guardado como favorito!');
+    updateFavList();
+}
+function updateFavList() {
+    const favList = document.getElementById('fav-list');
+    let favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
+    favList.innerHTML = '<option value="">Favoritos</option>';
+    favs.forEach((f, i) => {
+        favList.innerHTML += `<option value="${i}">${f.nome || f.lat+','+f.lon}</option>`;
+    });
+    favList.style.display = favs.length ? '' : 'none';
+}
+document.getElementById('fav-list').onchange = function() {
+    let favs = JSON.parse(localStorage.getItem('favoritos') || '[]');
+    const idx = this.value;
+    if (idx === "") return;
+    const f = favs[idx];
+    document.getElementById('destino').value = f.nome || `${f.lat},${f.lon}`;
+    document.getElementById('rota-btn').click();
+};
+
+// Atualiza favoritos ao carregar
+updateFavList();
+
+// Seleção manual de pontos (continua igual)
+document.querySelector('.side-buttons button[title="Rotas"]').onclick = function() {
+    alert('Clique no mapa para escolher o ponto de início da rota.');
+    selecting = true;
+    step = 1;
+    if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+    if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+    if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    document.getElementById('route-info').style.display = 'none';
+    document.getElementById('fav-btn').style.display = 'none';
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+    navigating = false;
+};
+
+map.on('click', function(e) {
+    if (!selecting) return;
+    if (step === 1) {
+        if (startMarker) map.removeLayer(startMarker);
+        startMarker = L.marker(e.latlng, {title: "Início"}).addTo(map).bindPopup("Início").openPopup();
+        alert('Agora clique no mapa para escolher o destino.');
+        step = 2;
+    } else if (step === 2) {
+        if (endMarker) map.removeLayer(endMarker);
+        endMarker = L.marker(e.latlng, {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
+        getRoute([startMarker.getLatLng().lat, startMarker.getLatLng().lng], [endMarker.getLatLng().lat, endMarker.getLatLng().lng]);
+        selecting = false;
+        step = 0;
+    }
+});
     </script>
 </body>
 </html>
