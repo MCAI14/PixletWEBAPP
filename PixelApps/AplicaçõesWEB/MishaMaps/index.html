@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MishaMaps</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #e6f2fb;
+        }
+        #map {
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        .top-bar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            border-radius: 30px;
+            box-shadow: 0 2px 12px #0002;
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+        .top-bar input[type="text"] {
+            border: none;
+            outline: none;
+            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f2f2f2;
+            margin-right: 10px;
+            width: 250px;
+        }
+        .top-bar button {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-left: 5px;
+            transition: background 0.2s;
+        }
+        .top-bar button:hover {
+            background: #0056b3;
+        }
+        .side-buttons {
+            position: fixed;
+            top: 90px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            z-index: 1000;
+        }
+        .side-buttons button {
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 2px 8px #0002;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: box-shadow 0.2s;
+        }
+        .side-buttons button:hover {
+            box-shadow: 0 4px 16px #0004;
+        }
+        .profile-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 2px 8px #0002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        .profile-btn img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        #route-info {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 16px 28px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px #0002;
+            display: none;
+            z-index: 1001;
+            font-size: 18px;
+        }
+        #start-nav {
+            margin-left: 20px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .top-bar input[type="text"] {
+                width: 120px;
+            }
+            .side-buttons {
+                top: 70px;
+            }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+            authDomain: "pixlet-333b1.firebaseapp.com",
+            projectId: "pixlet-333b1",
+            storageBucket: "pixlet-333b1.appspot.com",
+            messagingSenderId: "24565360033",
+            appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+            measurementId: "G-MPSCZV5FBE"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const profileBtn = document.querySelector('.profile-btn');
+            const profileImg = profileBtn.querySelector('img');
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // Mostra foto se existir, senão ícone padrão
+                    if (user.photoURL) {
+                        profileImg.src = user.photoURL;
+                    }
+                    profileBtn.title = user.email;
+                } else {
+                    // Se não estiver autenticado, redireciona para login
+                    window.location.href = "../../../login.html";
+                }
+            });
+            profileBtn.onclick = () => {
+                alert('Email: ' + (auth.currentUser ? auth.currentUser.email : 'Desconhecido'));
+            };
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="top-bar">
+        <input type="text" id="search" placeholder="Pesquisar local...">
+        <button id="search-btn">🔍</button>
+        <input type="text" id="destino" placeholder="Destino para rota...">
+        <button id="rota-btn">Rota</button>
+        <button id="loc-btn" title="Minha localização">📍</button>
+    </div>
+    <div class="side-buttons">
+        <button title="Rotas">🧭</button>
+        <button title="Tráfego">🚦</button>
+        <button title="Favoritos">⭐</button>
+    </div>
+    <div class="profile-btn" title="Conta">
+        <img src="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png" alt="Conta">
+    </div>
+    <div id="route-info">
+        <span id="route-summary"></span>
+        <button id="start-nav">Iniciar rota</button>
+    </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let routeLayer = null;
+        let startMarker = null;
+        let endMarker = null;
+        let selecting = false;
+        let step = 0;
+        let userLocation = null;
+        let routeCoords = [];
+        let routeInstructions = [];
+        let navIndex = 0;
+
+        // Inicializa o mapa centrado em Lisboa
+        const map = L.map('map').setView([38.7223, -9.1393], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Botão localização atual
+        document.getElementById('loc-btn').onclick = function() {
+            if (!navigator.geolocation) {
+                alert('Geolocalização não suportada!');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                userLocation = [lat, lon];
+                map.setView(userLocation, 16);
+                if (startMarker) map.removeLayer(startMarker);
+                startMarker = L.marker(userLocation, {title: "Você"}).addTo(map).bindPopup("Você está aqui!").openPopup();
+            }, function() {
+                alert('Não foi possível obter localização.');
+            });
+        };
+
+        // Pesquisa de local
+        document.getElementById('search-btn').onclick = async function() {
+            const query = document.getElementById('search').value;
+            if (!query) return;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+            const resp = await fetch(url);
+            const results = await resp.json();
+            if (results.length > 0) {
+                const { lat, lon, display_name } = results[0];
+                map.setView([lat, lon], 16);
+                L.marker([lat, lon]).addTo(map).bindPopup(display_name).openPopup();
+            } else {
+                alert('Local não encontrado!');
+            }
+        };
+
+        // Calcular rota digitando destino
+        document.getElementById('rota-btn').onclick = async function() {
+            const destino = document.getElementById('destino').value;
+            if (!destino) return alert('Digite o destino!');
+            if (!userLocation) return alert('Clique no botão 📍 para obter sua localização primeiro!');
+            // Geocoding do destino
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destino)}`;
+            const resp = await fetch(url);
+            const results = await resp.json();
+            if (results.length === 0) return alert('Destino não encontrado!');
+            const { lat, lon } = results[0];
+            if (endMarker) map.removeLayer(endMarker);
+            endMarker = L.marker([lat, lon], {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
+            getRoute(userLocation, [lat, lon]);
+        };
+
+        // Função de rota com tempo/distância e instruções
+        async function getRoute(start, end) {
+            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62489768748efd974aebb5c3854e82a1a288&start=${start[1]},${start[0]}&end=${end[1]},${end[0]}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            routeCoords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            routeInstructions = data.features[0].properties.segments[0].steps;
+            const distance = data.features[0].properties.segments[0].distance; // em metros
+            const duration = data.features[0].properties.segments[0].duration; // em segundos
+
+            if (routeLayer) map.removeLayer(routeLayer);
+            routeLayer = L.polyline(routeCoords, {color: 'blue', weight: 6}).addTo(map);
+            map.fitBounds(routeLayer.getBounds());
+
+            // Mostra tempo e distância
+            document.getElementById('route-info').style.display = 'block';
+            document.getElementById('route-summary').innerHTML =
+                `Distância: ${(distance/1000).toFixed(1)} km &nbsp; | &nbsp; Tempo: ${Math.round(duration/60)} min`;
+            navIndex = 0;
+        }
+
+        // Botão iniciar navegação
+        document.getElementById('start-nav').onclick = function() {
+            if (!routeInstructions.length) return;
+            navIndex = 0;
+            showNextInstruction();
+        };
+
+        // Mostra instrução passo-a-passo (simples)
+        function showNextInstruction() {
+            if (navIndex >= routeInstructions.length) {
+                alert("Chegou ao destino!");
+                document.getElementById('route-info').style.display = 'none';
+                return;
+            }
+            const step = routeInstructions[navIndex];
+            const msg = `${step.instruction} (${(step.distance/1000).toFixed(2)} km)`;
+            alert(msg);
+            navIndex++;
+            // Pode avançar para o próximo passo automaticamente ou por botão
+            if (navIndex < routeInstructions.length) {
+                setTimeout(showNextInstruction, 3000); // Próxima instrução em 3s (simulação)
+            } else {
+                setTimeout(() => alert("Chegou ao destino!"), 2000);
+            }
+        }
+
+        // Seleção manual de pontos (continua igual)
+        document.querySelector('.side-buttons button[title="Rotas"]').onclick = function() {
+            alert('Clique no mapa para escolher o ponto de início da rota.');
+            selecting = true;
+            step = 1;
+            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+            document.getElementById('route-info').style.display = 'none';
+        };
+
+        map.on('click', function(e) {
+            if (!selecting) return;
+            if (step === 1) {
+                if (startMarker) map.removeLayer(startMarker);
+                startMarker = L.marker(e.latlng, {title: "Início"}).addTo(map).bindPopup("Início").openPopup();
+                alert('Agora clique no mapa para escolher o destino.');
+                step = 2;
+            } else if (step === 2) {
+                if (endMarker) map.removeLayer(endMarker);
+                endMarker = L.marker(e.latlng, {title: "Destino"}).addTo(map).bindPopup("Destino").openPopup();
+                getRoute([startMarker.getLatLng().lat, startMarker.getLatLng().lng], [endMarker.getLatLng().lat, endMarker.getLatLng().lng]);
+                selecting = false;
+                step = 0;
+            }
+        });
+    </script>
+</body>
+</html>
