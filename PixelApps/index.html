@@ -40,5 +40,29 @@
     <a href="QuizzesEducativos.html" class="btn">Quizzes Educativos</a>
     <a href="Jogos.html" class="btn">Jogos</a>
     <a href="Utilitarios.html" class="btn">Utilitários</a>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+            authDomain: "pixlet-333b1.firebaseapp.com",
+            projectId: "pixlet-333b1",
+            storageBucket: "pixlet-333b1.appspot.com",
+            messagingSenderId: "24565360033",
+            appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+            measurementId: "G-MPSCZV5FBE"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Verifica se o utilizador está autenticado
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "../login.html";
+            }
+        });
+    </script>
 </body>
 </html>
