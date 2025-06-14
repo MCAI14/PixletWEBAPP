@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Página não encontrada - Pixlet</title>
+    <meta http-equiv="refresh" content="5; url=index.html">
+    <style>
+        body {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 40px 30px;
+            box-shadow: 0 0 10px #f5c6cb;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2em;
+        }
+        .btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <p>Oops! Página não encontrada.</p>
+        <p>Será redirecionado para a página inicial em 5 segundos.</p>
+        <a href="index.html" class="btn">Voltar agora</a>
+    </div>
+    <script>
+        // Redireciona manualmente se o botão for clicado
+        document.querySelector('.btn').onclick = function() {
+            window.location.href = 'index.html';
+        };
+    </script>
+</body>
+</html>
