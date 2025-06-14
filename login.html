@@ -60,17 +60,22 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
     <script>
+        // Importação dos módulos Firebase (v10+)
+        const { initializeApp } = firebase;
+        const { getAuth, signInWithEmailAndPassword } = firebase.auth;
+
         // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
             authDomain: "pixlet-333b1.firebaseapp.com",
             projectId: "pixlet-333b1",
-            storageBucket: "pixlet-333b1.firebasestorage.app",
+            storageBucket: "pixlet-333b1.appspot.com",
             messagingSenderId: "24565360033",
             appId: "1:24565360033:web:16911c608dd3737c33d7e0",
             measurementId: "G-MPSCZV5FBE"
         };
-        firebase.initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
         async function handleLogin(event) {
             event.preventDefault();
@@ -78,7 +83,7 @@
             const password = document.querySelector('input[name="password"]').value;
 
             try {
-                await firebase.auth().signInWithEmailAndPassword(email, password);
+                await signInWithEmailAndPassword(auth, email, password);
                 localStorage.setItem('loggedInUser', email);
                 window.location.href = 'index.html';
             } catch (error) {
