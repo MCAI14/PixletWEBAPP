@@ -61,11 +61,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
     <script>
-        // Importa os módulos necessários
-        const { initializeApp } = firebase;
-        const { getAuth, createUserWithEmailAndPassword } = firebase.auth;
-
-        // Configuração do Firebase
+        // Inicialização do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
             authDomain: "pixlet-333b1.firebaseapp.com",
@@ -75,8 +71,8 @@
             appId: "1:24565360033:web:16911c608dd3737c33d7e0",
             measurementId: "G-MPSCZV5FBE"
         };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.getAuth(app);
 
         async function handleRegister(event) {
             event.preventDefault();
@@ -93,7 +89,7 @@
             }
 
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
+                await firebase.createUserWithEmailAndPassword(auth, email, password);
                 document.getElementById('success-message').textContent = 'Conta criada com sucesso! A redirecionar para o login...';
                 setTimeout(() => {
                     window.location.href = 'login.html';
