@@ -433,3 +433,40 @@ async function fetchAimlApi(question) {
         return null;
     }
 }
+
+document.getElementById('chat-input-bar').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const input = document.getElementById('input-field');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    input.value = '';
+
+    addMessage('paixel', 'A pensar...');
+    try {
+        const aiLogic = window.aiLogic;
+        const generateContent = window.generateContent;
+        const result = await generateContent(aiLogic, { prompt: message });
+        removeLastPaixelThinking();
+        addMessage('paixel', result.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta.");
+    } catch (err) {
+        removeLastPaixelThinking();
+        addMessage('paixel', "Erro ao contactar a IA.");
+    }
+});
+
+function addMessage(sender, text) {
+    const chat = document.getElementById('chat-container');
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + sender;
+    msg.textContent = text;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function removeLastPaixelThinking() {
+    const chat = document.getElementById('chat-container');
+    const msgs = chat.querySelectorAll('.msg.paixel');
+    if (msgs.length) chat.removeChild(msgs[msgs.length - 1]);
+}

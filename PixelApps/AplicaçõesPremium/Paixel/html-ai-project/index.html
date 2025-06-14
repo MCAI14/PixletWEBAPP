@@ -14,9 +14,29 @@
         <!-- Mensagens do chat serão inseridas aqui pelo JS -->
     </main>
     <form id="chat-input-bar" autocomplete="off">
-        <input type="text" id="input-field" placeholder="Enviar mensagem à Paixel..." autocomplete="off" />
-        <button id="submit-button" type="submit">➤</button>
+        <input id="input-field" type="text" placeholder="Enviar mensagem à Paixel..." autocomplete="off" />
+        <button type="submit">Enviar</button>
     </form>
     <script src="script.js"></script>
+
+    <!-- Firebase App (necessário) -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAiLogic, generateContent } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-ai-logic.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+        authDomain: "pixlet-333b1.firebaseapp.com",
+        projectId: "pixlet-333b1",
+        storageBucket: "pixlet-333b1.appspot.com",
+        messagingSenderId: "24565360033",
+        appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+        measurementId: "G-MPSCZV5FBE"
+    };
+    const app = initializeApp(firebaseConfig);
+    const aiLogic = getAiLogic(app);
+    window.aiLogic = aiLogic;
+    window.generateContent = generateContent;
+    </script>
 </body>
 </html>
