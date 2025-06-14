@@ -54,14 +54,19 @@
             appId: "1:24565360033:web:16911c608dd3737c33d7e0",
             measurementId: "G-MPSCZV5FBE"
         };
+
+        // Inicializa Firebase só uma vez
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Verifica se o utilizador está autenticado
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = "../login.html";
-            }
+        // Aguarda o carregamento do DOM antes de verificar autenticação
+        window.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    // Caminho relativo para login.html (ajuste se necessário)
+                    window.location.replace("../login.html");
+                }
+            });
         });
     </script>
 </body>
