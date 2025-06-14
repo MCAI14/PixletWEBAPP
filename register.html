@@ -19,30 +19,30 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px; /* Ensure the container has a fixed width */
-            text-align: center; /* Center align text inside the container */
+            width: 300px;
+            text-align: center;
         }
         .register-container h2 {
             margin-bottom: 20px;
-            font-size: 18px; /* Adjust font size to fit within the container */
+            font-size: 18px;
         }
         .register-container input {
             display: block;
-            width: calc(100% - 20px); /* Adjust width to fit within the container */
+            width: calc(100% - 20px);
             padding: 10px;
-            margin: 10px auto; /* Center the input fields */
+            margin: 10px auto;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
         .register-container button {
-            width: calc(100% - 20px); /* Adjust width to fit within the container */
+            width: calc(100% - 20px);
             padding: 10px;
             background-color: #007BFF;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 10px auto; /* Center the button */
+            margin: 10px auto;
         }
         .register-container button:hover {
             background-color: #0056b3;
@@ -57,32 +57,45 @@
             color: green;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <!-- Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
     <script>
-        function handleRegister(event) {
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+            authDomain: "pixlet-333b1.firebaseapp.com",
+            projectId: "pixlet-333b1",
+            storageBucket: "pixlet-333b1.firebasestorage.app",
+            messagingSenderId: "24565360033",
+            appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+            measurementId: "G-MPSCZV5FBE"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        async function handleRegister(event) {
             event.preventDefault();
-            const username = document.querySelector('input[name="username"]').value;
+            const email = document.querySelector('input[name="username"]').value;
             const password = document.querySelector('input[name="password"]').value;
             const confirmPassword = document.querySelector('input[name="confirm-password"]').value;
+
+            document.getElementById('error-message').textContent = '';
+            document.getElementById('success-message').textContent = '';
 
             if (password !== confirmPassword) {
                 document.getElementById('error-message').textContent = 'As senhas não coincidem.';
                 return;
             }
 
-            if (localStorage.getItem(username)) {
-                document.getElementById('error-message').textContent = 'Nome de usuário já existe.';
-                return;
+            try {
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
+                document.getElementById('success-message').textContent = 'Conta criada com sucesso! A redirecionar para o login...';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } catch (error) {
+                document.getElementById('error-message').textContent = error.message;
             }
-
-            const hashedPassword = CryptoJS.SHA256(password).toString();
-            localStorage.setItem(username, hashedPassword);
-            document.getElementById('success-message').textContent = 'Conta criada com sucesso. A redirecionar para o login...';
-            document.getElementById('error-message').textContent = '';
-
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 3000);
         }
     </script>
 </head>
@@ -90,7 +103,7 @@
     <div class="register-container">
         <h2>Register - Pixlet</h2>
         <form onsubmit="handleRegister(event)">
-            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="username" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="password" name="confirm-password" placeholder="Confirm Password" required>
             <button type="submit">Register</button>
