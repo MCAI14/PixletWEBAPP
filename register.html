@@ -57,24 +57,36 @@
             color: green;
         }
     </style>
-    <!-- Firebase scripts -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-    <script>
-  // Inicialização do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
-    authDomain: "pixlet-333b1.firebaseapp.com",
-    projectId: "pixlet-333b1",
-    storageBucket: "pixlet-333b1.appspot.com",
-    messagingSenderId: "24565360033",
-    appId: "1:24565360033:web:16911c608dd3737c33d7e0",
-    measurementId: "G-MPSCZV5FBE"
-  };
-  const app = firebase.initializeApp(firebaseConfig);
-  const auth = firebase.getAuth(app);
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register - Pixlet</h2>
+        <form id="register-form">
+            <input type="email" name="username" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
-        async function handleRegister(event) {
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+            authDomain: "pixlet-333b1.firebaseapp.com",
+            projectId: "pixlet-333b1",
+            storageBucket: "pixlet-333b1.appspot.com",
+            messagingSenderId: "24565360033",
+            appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+            measurementId: "G-MPSCZV5FBE"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('register-form').addEventListener('submit', async (event) => {
             event.preventDefault();
             const email = document.querySelector('input[name="username"]').value;
             const password = document.querySelector('input[name="password"]').value;
@@ -89,7 +101,7 @@
             }
 
             try {
-                await firebase.createUserWithEmailAndPassword(auth, email, password);
+                await createUserWithEmailAndPassword(auth, email, password);
                 document.getElementById('success-message').textContent = 'Conta criada com sucesso! A redirecionar para o login...';
                 setTimeout(() => {
                     window.location.href = 'login.html';
@@ -97,20 +109,7 @@
             } catch (error) {
                 document.getElementById('error-message').textContent = error.message;
             }
-        }
+        });
     </script>
-</head>
-<body>
-    <div class="register-container">
-        <h2>Register - Pixlet</h2>
-        <form onsubmit="handleRegister(event)">
-            <input type="email" name="username" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
-            <button type="submit">Register</button>
-        </form>
-        <div id="error-message" class="error-message"></div>
-        <div id="success-message" class="success-message"></div>
-    </div>
 </body>
 </html>
