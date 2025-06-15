@@ -180,6 +180,106 @@
             });
         });
     </script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+    authDomain: "pixlet-333b1.firebaseapp.com",
+    projectId: "pixlet-333b1",
+    storageBucket: "pixlet-333b1.appspot.com",
+    messagingSenderId: "24565360033",
+    appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+    measurementId: "G-MPSCZV5FBE"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Mostra pontos e premium no topo
+function showPoints(points, isPremium) {
+    let el = document.getElementById('points-premium');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'points-premium';
+        el.style.position = 'fixed';
+        el.style.top = '10px';
+        el.style.left = '50%';
+        el.style.transform = 'translateX(-50%)';
+        el.style.background = isPremium ? '#ffd700' : '#fff';
+        el.style.color = isPremium ? '#222' : '#007BFF';
+        el.style.padding = '8px 22px';
+        el.style.borderRadius = '20px';
+        el.style.boxShadow = '0 2px 8px #0002';
+        el.style.fontWeight = 'bold';
+        el.style.zIndex = 9999;
+        document.body.appendChild(el);
+    }
+    el.innerHTML = isPremium
+        ? `🌟 Premium ativo!`
+        : `Pontos: <b>${points}</b> &nbsp; <span style="color:#888">(100 pontos = 3 dias premium)</span>`;
+}
+
+// Função para dar pontos ao utilizador
+async function addPoints(uid, amount = 1) {
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    let newPoints = amount;
+    if (snap.exists()) {
+        const data = snap.data();
+        newPoints = (data.points || 0) + amount;
+        await updateDoc(ref, { points: newPoints });
+        checkPremium(uid, newPoints);
+    } else {
+        await setDoc(ref, { points: amount });
+    }
+}
+
+// Função para verificar e ativar premium
+async function checkPremium(uid, points) {
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    let isPremium = false;
+    let expires = 0;
+    if (snap.exists()) {
+        const data = snap.data();
+        if (data.premiumUntil && data.premiumUntil > Date.now()) {
+            isPremium = true;
+            expires = data.premiumUntil;
+        }
+    }
+    if (points >= 100) { // 100 pontos = 3 dias premium
+        expires = Date.now() + 3 * 24 * 60 * 60 * 1000;
+        await updateDoc(ref, { premiumUntil: expires, points: 0 });
+        isPremium = true;
+        alert("Parabéns! Ativou o modo premium por 3 dias!");
+    }
+    showPoints(isPremium ? 0 : points, isPremium);
+}
+
+// Verifica premium ao entrar
+onAuthStateChanged(auth, async user => {
+    if (user) {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        let points = 0, isPremium = false;
+        if (snap.exists()) {
+            const data = snap.data();
+            points = data.points || 0;
+            isPremium = data.premiumUntil && data.premiumUntil > Date.now();
+        }
+        showPoints(points, isPremium);
+
+        // Adiciona pontos a cada pesquisa
+        document.querySelector('.search-container form').addEventListener('submit', function() {
+            addPoints(user.uid, 1);
+        });
+    }
+});
+</script>
 </head>
 <body>
     <!-- Botão de apps -->
