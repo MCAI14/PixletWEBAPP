@@ -156,317 +156,58 @@ async function fetchWeather(query) {
     }
 }
 
-const chatContainer = document.getElementById('chat-container');
-const inputField = document.getElementById('input-field');
-const submitButton = document.getElementById('submit-button');
-const chatForm = document.getElementById('chat-input-bar');
-
-// Função para adicionar mensagem ao chat
-function addMessage(text, sender = 'user', source = null) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = text;
-    msgDiv.appendChild(bubble);
-
-    // Só mostra a fonte se o usuário pedir
-    if (source && window.showSourceNext) {
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        meta.textContent = `Fonte: ${source}`;
-        msgDiv.appendChild(meta);
-        window.showSourceNext = false; // Reseta o flag
-    }
-
-    chatContainer.appendChild(msgDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-// Função para resposta da IA (exemplo simples, substitua pela sua lógica)
-async function getAIResponse(question) {
-    let knowledgeBase = getKnowledgeBase();
-
-    // Cumprimentos/despedidas...
-
-    if (knowledgeBase[question]) {
-        return { text: knowledgeBase[question], source: "memória" };
-    }
-
-    // Tenta aimlapi
-    const aimlReply = await fetchAimlApi(question);
-    if (aimlReply) {
-        knowledgeBase[question] = aimlReply;
-        saveKnowledgeBase(knowledgeBase);
-        return { text: aimlReply, source: "aimlapi" };
-    }
-
-    // Piada
-    if (/piada|engraçado|conta.*uma/.test(question)) {
-        const joke = await fetchJoke();
-        if (joke) {
-            knowledgeBase[question] = joke + " (JokeAPI)";
-            saveKnowledgeBase(knowledgeBase);
-            return { text: joke, source: "JokeAPI" };
-        }
-    }
-
-    // Conselho
-    if (/conselho|diz.*algo|preciso.*dica/.test(question)) {
-        const advice = await fetchAdvice();
-        if (advice) {
-            knowledgeBase[question] = advice + " (AdviceAPI)";
-            saveKnowledgeBase(knowledgeBase);
-            return { text: advice, source: "AdviceAPI" };
-        }
-    }
-
-    // Tempo/clima
-    const weather = await fetchWeather(question);
-    if (weather) {
-        knowledgeBase[question] = weather + " (Open-Meteo)";
-        saveKnowledgeBase(knowledgeBase);
-        return { text: weather, source: "Open-Meteo" };
-    }
-
-    // Curiosidade sobre número
-    const numberFact = await fetchNumbersAPI(question);
-    if (numberFact) {
-        knowledgeBase[question] = numberFact + " (NumbersAPI)";
-        saveKnowledgeBase(knowledgeBase);
-        return { text: numberFact, source: "NumbersAPI" };
-    }
-
-    // DuckDuckGo
-    const ddg = await fetchDuckDuckGoAnswer(question);
-    if (ddg) {
-        knowledgeBase[question] = ddg + " (DuckDuckGo)";
-        saveKnowledgeBase(knowledgeBase);
-        return { text: ddg, source: "DuckDuckGo" };
-    }
-
-    // Wikipedia
-    const wiki = await fetchWikipediaSummary(question);
-    if (wiki) {
-        knowledgeBase[question] = wiki + " (Wikipedia)";
-        saveKnowledgeBase(knowledgeBase);
-        return { text: wiki, source: "Wikipedia" };
-    }
-
-    // Wiktionary
-    const wikt = await fetchWiktionaryDefinition(question);
-    if (wikt) {
-        knowledgeBase[question] = wikt + " (Wiktionary)";
-        saveKnowledgeBase(knowledgeBase);
-        return { text: wikt, source: "Wiktionary" };
-    }
-
-    // Se não encontrou, pede para o usuário ensinar
-    return { text: "Não encontrei resposta. Pode me ensinar?", source: null };
-}
-
-// Evento de envio do formulário
-chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userText = inputField.value.trim();
-    if (!userText) return;
-
-    // Se o usuário digitar "/fonte", ativa o flag para mostrar a fonte na próxima resposta
-    if (userText.toLowerCase() === "/fonte") {
-        window.showSourceNext = true;
-        addMessage("A fonte será mostrada na próxima resposta da IA.", 'ai');
-        inputField.value = '';
-        return;
-    }
-
-    addMessage(userText, 'user');
-    inputField.value = '';
-    submitButton.disabled = true;
-
-    // Resposta da IA
-    const aiObj = await getAIResponse(userText);
-    addMessage(aiObj.text, 'ai', aiObj.source);
-    submitButton.disabled = false;
-    inputField.focus();
-});
-
-// Mensagem inicial
-addMessage("Olá! Como posso ajudar você hoje?", 'ai');
-
-document.getElementById('submit-button').addEventListener('click', async function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-input-bar');
     const inputField = document.getElementById('input-field');
-    const output = document.getElementById('response-output');
-    const question = inputField.value.trim().toLowerCase();
-    let knowledgeBase = getKnowledgeBase();
 
-    if (!question) {
-        output.textContent = "Por favor, faça uma pergunta.";
-        return;
-    }
-
-    if (knowledgeBase[question]) {
-        output.textContent = knowledgeBase[question];
-        return;
-    }
-
-    output.textContent = "Procurando resposta em várias fontes gratuitas...";
-
-    // Busca por contexto
-    let answer = null;
-
-    // Piada
-    if (/piada|engraçado|conta.*uma/.test(question)) {
-        answer = await fetchJoke();
-        if (answer) {
-            output.textContent = answer;
-            knowledgeBase[question] = answer;
-            saveKnowledgeBase(knowledgeBase);
-            return;
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = inputField.value.trim();
+        if (!message) return;
+        addMessage('user', message);
+        inputField.value = '';
+        addMessage('paixel', 'A pensar...');
+        try {
+            const resposta = await askOpenRouter(message);
+            removeLastPaixelThinking();
+            addMessage('paixel', resposta);
+        } catch (err) {
+            removeLastPaixelThinking();
+            addMessage('paixel', "Erro ao contactar a IA.");
         }
+    });
+
+    function addMessage(sender, text) {
+        const msg = document.createElement('div');
+        msg.className = 'msg ' + sender;
+        msg.textContent = text;
+        chatContainer.appendChild(msg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // Conselho
-    if (/conselho|diz.*algo|preciso.*dica/.test(question)) {
-        answer = await fetchAdvice();
-        if (answer) {
-            output.textContent = answer;
-            knowledgeBase[question] = answer;
-            saveKnowledgeBase(knowledgeBase);
-            return;
-        }
-    }
-
-    // Tempo/clima
-    answer = await fetchWeather(question);
-    if (answer) {
-        output.textContent = answer;
-        knowledgeBase[question] = answer;
-        saveKnowledgeBase(knowledgeBase);
-        return;
-    }
-
-    // Curiosidade sobre número
-    answer = await fetchNumbersAPI(question);
-    if (answer) {
-        output.textContent = answer;
-        knowledgeBase[question] = answer;
-        saveKnowledgeBase(knowledgeBase);
-        return;
-    }
-
-    // DuckDuckGo
-    answer = await fetchDuckDuckGoAnswer(question);
-    if (answer) {
-        output.textContent = answer;
-        knowledgeBase[question] = answer;
-        saveKnowledgeBase(knowledgeBase);
-        return;
-    }
-
-    // Wikipedia
-    answer = await fetchWikipediaSummary(question);
-    if (answer) {
-        output.textContent = answer;
-        knowledgeBase[question] = answer;
-        saveKnowledgeBase(knowledgeBase);
-        return;
-    }
-
-    // Wiktionary
-    answer = await fetchWiktionaryDefinition(question);
-    if (answer) {
-        output.textContent = answer;
-        knowledgeBase[question] = answer;
-        saveKnowledgeBase(knowledgeBase);
-        return;
-    }
-
-    // Se não encontrou, pede para o usuário ensinar
-    output.textContent = "Não encontrei resposta. Como devo responder a isso?";
-    document.getElementById('submit-button').disabled = true;
-    inputField.value = "";
-    inputField.placeholder = "Digite a resposta para ensinar a IA...";
-    inputField.focus();
-
-    function learnAnswer() {
-        const userAnswer = inputField.value.trim();
-        if (userAnswer) {
-            knowledgeBase[question] = userAnswer;
-            saveKnowledgeBase(knowledgeBase);
-            output.textContent = "Aprendi! Pergunte novamente para ver a resposta.";
-            inputField.value = "";
-            inputField.placeholder = "Ask me anything...";
-            document.getElementById('submit-button').disabled = false;
-            inputField.removeEventListener('keydown', onEnter);
-        }
-    }
-
-    function onEnter(e) {
-        if (e.key === 'Enter') {
-            learnAnswer();
-        }
-    }
-
-    inputField.addEventListener('keydown', onEnter);
-    document.getElementById('submit-button').onclick = learnAnswer;
-});
-
-async function fetchAimlApi(question) {
-    try {
-        const response = await fetch("https://api.aimlapi.com/api/v1/prompt", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-API-KEY": "c0c4affc7b144dc78a5c51c98b3531f5"
-            },
-            body: JSON.stringify({
-                prompt: question,
-                // Adicione outros parâmetros se a documentação pedir
-            })
-        });
-        const data = await response.json();
-        if (data && data.completion) {
-            return data.completion.trim();
-        }
-        return null;
-    } catch (e) {
-        return null;
-    }
-}
-
-document.getElementById('chat-input-bar').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const input = document.getElementById('input-field');
-    const message = input.value.trim();
-    if (!message) return;
-
-    addMessage('user', message);
-    input.value = '';
-
-    addMessage('paixel', 'A pensar...');
-    try {
-        const aiLogic = window.aiLogic;
-        const generateContent = window.generateContent;
-        const result = await generateContent(aiLogic, { prompt: message });
-        removeLastPaixelThinking();
-        addMessage('paixel', result.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta.");
-    } catch (err) {
-        removeLastPaixelThinking();
-        addMessage('paixel', "Erro ao contactar a IA.");
+    function removeLastPaixelThinking() {
+        const msgs = chatContainer.querySelectorAll('.msg.paixel');
+        if (msgs.length) chatContainer.removeChild(msgs[msgs.length - 1]);
     }
 });
 
-function addMessage(sender, text) {
-    const chat = document.getElementById('chat-container');
-    const msg = document.createElement('div');
-    msg.className = 'msg ' + sender;
-    msg.textContent = text;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-function removeLastPaixelThinking() {
-    const chat = document.getElementById('chat-container');
-    const msgs = chat.querySelectorAll('.msg.paixel');
-    if (msgs.length) chat.removeChild(msgs[msgs.length - 1]);
+// Função askOpenRouter já definida no index.html ou aqui
+async function askOpenRouter(prompt) {
+    const apiKey = "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"; // Substitui pela tua chave OpenRouter
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    const body = {
+        model: "mistralai/mixtral-8x7b", // ou outro modelo gratuito suportado
+        messages: [{ role: "user", content: prompt }]
+    };
+    const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+        },
+        body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content || "Sem resposta.";
 }
