@@ -43,6 +43,15 @@
       color: #545454;
       font-size: 14px;
     }
+    .result.pixlet {
+      border-left: 4px solid #4285F4;
+      background: #eaf1fb;
+    }
+    .url {
+      font-size: 14px;
+      color: #006621;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -54,6 +63,7 @@
   <div id="results">
     <!-- Os resultados serão inseridos aqui -->
   </div>
+  <div id="pixlet-points" style="position:absolute;top:10px;right:20px;background:#fff;color:#007bff;padding:6px 18px;border-radius:16px;box-shadow:0 2px 8px #0002;font-weight:bold;display:none;"></div>
   <script>
     // Recupera o parâmetro "q" da URL
     const params = new URLSearchParams(window.location.search);
@@ -62,8 +72,16 @@
   
     // Dados estáticos para simulação de resultados
     const data = [
-      { title: "Página Inicial - Pixlet", url: "index.html", snippet: "Bem-vindo ao site oficial Pixlet." },
-      { title: "PixWrite Editor", url: "PixelApps/AplicaçõesWEB/PixWrite/editor.html", snippet: "Crie e edite seus textos com o editor PixWrite." },
+      {
+        title: "Pixlet",
+        url: "/index.html",
+        snippet: "O portal principal do Pixlet."
+      },
+      {
+        title: "PixWrite",
+        url: "/PixelApps/AplicaçõesWEB/PixWrite/editor.html",
+        snippet: "Editor de texto avançado PixWrite."
+      },
       { title: "Quizzes Educativos", url: "PixelApps/QuizzesEducativos.html", snippet: "Teste seus conhecimentos com nossos quizzes." },
       { title: "Jogos", url: "PixelApps/Jogos.html", snippet: "Explore os jogos disponíveis no Pixlet." }
     ];
@@ -72,19 +90,93 @@
   
     // Função simulada que retorna 1000 resultados do Google
     async function fetchGoogleResults(query) {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          const googleResults = [];
-          for (let i = 1; i <= 1000; i++) {
-            googleResults.push({
-              title: "Resultado Google " + i,
-              url: "https://www.google.com/search?q=" + encodeURIComponent(query) + "&i=" + i,
-              snippet: "Descrição do resultado Google " + i + "."
+      // Exemplos de sites reais para simulação
+      const fakeSites = [
+        {
+          title: "Wikipedia",
+          url: "https://pt.wikipedia.org/wiki/" + encodeURIComponent(query),
+          displayUrl: "pt.wikipedia.org",
+          snippet: "Enciclopédia livre sobre " + query + "."
+        },
+        {
+          title: "YouTube",
+          url: "https://www.youtube.com/results?search_query=" + encodeURIComponent(query),
+          displayUrl: "youtube.com",
+          snippet: "Vídeos relacionados com " + query + " no YouTube."
+        },
+        {
+          title: "Notícias Google",
+          url: "https://news.google.com/search?q=" + encodeURIComponent(query),
+          displayUrl: "news.google.com",
+          snippet: "Notícias recentes sobre " + query + "."
+        },
+        {
+          title: "Dicionário Priberam",
+          url: "https://dicionario.priberam.org/" + encodeURIComponent(query),
+          displayUrl: "dicionario.priberam.org",
+          snippet: "Definição de " + query + " no Dicionário Priberam."
+        },
+        {
+          title: "Wikipedia EN",
+          url: "https://en.wikipedia.org/wiki/" + encodeURIComponent(query),
+          displayUrl: "en.wikipedia.org",
+          snippet: "English Wikipedia article about " + query + "."
+        },
+        {
+          title: "Stack Overflow",
+          url: "https://stackoverflow.com/search?q=" + encodeURIComponent(query),
+          displayUrl: "stackoverflow.com",
+          snippet: "Perguntas e respostas sobre " + query + " no Stack Overflow."
+        }
+      ];
+      // Repete e embaralha para simular vários resultados
+      let googleResults = [];
+      for (let i = 0; i < 10; i++) {
+        const site = fakeSites[i % fakeSites.length];
+        googleResults.push({
+          title: site.title,
+          url: site.url,
+          displayUrl: site.displayUrl,
+          snippet: site.snippet,
+          isGoogleResult: true
+        });
+      }
+      return googleResults;
+    }
+  
+    async function fetchDuckDuckGoResults(query) {
+        const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        let results = [];
+  
+        // Resposta direta (Abstract)
+        if (data.AbstractURL && data.AbstractText) {
+            results.push({
+                title: data.Heading || query,
+                url: data.AbstractURL,
+                displayUrl: data.AbstractURL.replace(/^https?:\/\//, '').split('/')[0],
+                snippet: data.AbstractText,
+                isDuckDuckGo: true
             });
-          }
-          resolve(googleResults);
-        }, 500);
-      });
+        }
+  
+        // Artigos relacionados
+        if (data.RelatedTopics && data.RelatedTopics.length) {
+            data.RelatedTopics.forEach(topic => {
+                if (topic.Text && topic.FirstURL) {
+                    results.push({
+                        title: topic.Text.split(' - ')[0],
+                        url: topic.FirstURL,
+                        displayUrl: topic.FirstURL.replace(/^https?:\/\//, '').split('/')[0],
+                        snippet: topic.Text,
+                        isDuckDuckGo: true
+                    });
+                }
+            });
+        }
+  
+        return results;
     }
   
     // Função para embaralhar um array
@@ -98,31 +190,33 @@
   
     // Função que mescla os resultados estáticos com os resultados do Google
     async function showCombinedResults(query) {
+      // Resultados Pixlet filtrados
       const staticResults = data.filter(item =>
         item.title.toLowerCase().includes(query.toLowerCase()) ||
         item.snippet.toLowerCase().includes(query.toLowerCase())
       );
   
+      // Resultados Google simulados
       const googleResults = await fetchGoogleResults(query);
-      // Mescla os dois arrays
-      const combinedResults = staticResults.concat(googleResults);
-      // Embaralha os resultados para "misturá-los"
-      const mixedResults = shuffleArray(combinedResults);
+      const duckDuckGoResults = await fetchDuckDuckGoResults(query);
+  
+      // Mostra primeiro os resultados Pixlet, depois alguns do Google e DuckDuckGo
+      const combinedResults = staticResults.concat(googleResults.slice(0, 10), duckDuckGoResults.slice(0, 10)); // só 10 de cada
   
       resultsContainer.innerHTML = "";
   
-      if (mixedResults.length === 0) {
+      if (combinedResults.length === 0) {
         resultsContainer.innerHTML = `<p>Nenhum resultado encontrado para "${query}".</p>`;
       } else {
-        mixedResults.forEach(item => {
+        combinedResults.forEach(item => {
           const div = document.createElement('div');
           div.className = 'result';
-          // Se for resultado do Google, remove target="_blank" para redirecionar na mesma aba.
-          const isGoogleResult = item.title.startsWith("Resultado Google");
-          const targetAttr = isGoogleResult ? 'target="_self"' : 'target="_blank"';
+          const isGoogleResult = item.isGoogleResult; // Use uma flag se quiser distinguir
+          const targetAttr = 'target="_blank"';
           div.innerHTML = `
             <a href="${item.url}" ${targetAttr}>${item.title}</a>
             <p>${item.snippet}</p>
+            <div class="url">${item.displayUrl}</div>
           `;
           resultsContainer.appendChild(div);
         });
@@ -136,6 +230,58 @@
       const newQuery = document.getElementById('query').value;
       window.location.href = "search-results.html?q=" + encodeURIComponent(newQuery);
     }
+
+    document.getElementById('query').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') searchAgain();
+    });
+  </script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+  
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+        authDomain: "pixlet-333b1.firebaseapp.com",
+        projectId: "pixlet-333b1",
+        storageBucket: "pixlet-333b1.appspot.com",
+        messagingSenderId: "24565360033",
+        appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+        measurementId: "G-MPSCZV5FBE"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+  
+    async function addPoints(uid, amount = 1) {
+        const ref = doc(db, "users", uid);
+        const snap = await getDoc(ref);
+        let newPoints = amount;
+        if (snap.exists()) {
+            const data = snap.data();
+            newPoints = (data.points || 0) + amount;
+            await updateDoc(ref, { points: newPoints });
+        } else {
+            await setDoc(ref, { points: amount });
+        }
+    }
+  
+    // Mostra pontos no topo
+    async function showPoints(uid) {
+        const ref = doc(db, "users", uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+            const data = snap.data();
+            const el = document.getElementById('pixlet-points');
+            el.textContent = `Pontos: ${data.points || 0}`;
+            el.style.display = '';
+        }
+    }
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            addPoints(user.uid, 1).then(() => showPoints(user.uid));
+        }
+    });
   </script>
 </body>
 </html>
