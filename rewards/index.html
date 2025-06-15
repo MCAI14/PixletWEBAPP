@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Recompensas Pixlet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7faff; margin: 0; }
+        .container { max-width: 400px; margin: 60px auto; background: #fff; border-radius: 18px; box-shadow: 0 2px 16px #0001; padding: 32px 28px; text-align: center; }
+        .points { font-size: 2.5em; color: #007bff; margin: 20px 0 10px 0; }
+        .goal { color: #888; margin-bottom: 24px; }
+        #activate-premium { display: none; margin-top: 24px; background: #ffd700; color: #222; border: none; border-radius: 8px; padding: 12px 32px; font-size: 1.1em; cursor: pointer; font-weight: bold; }
+        #premium-status { margin-top: 24px; font-size: 1.2em; color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>As tuas Recompensas</h2>
+        <div class="points" id="points">0</div>
+        <div class="goal">Objetivo: 100 pontos = 3 dias Premium</div>
+        <button id="activate-premium">Ativar Premium por 3 dias</button>
+        <div id="premium-status"></div>
+    </div>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-piyweqyb1H682ocISUBZFAUuFB4OA_U",
+        authDomain: "pixlet-333b1.firebaseapp.com",
+        projectId: "pixlet-333b1",
+        storageBucket: "pixlet-333b1.appspot.com",
+        messagingSenderId: "24565360033",
+        appId: "1:24565360033:web:16911c608dd3737c33d7e0",
+        measurementId: "G-MPSCZV5FBE"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const pointsEl = document.getElementById('points');
+    const btn = document.getElementById('activate-premium');
+    const statusEl = document.getElementById('premium-status');
+
+    let userRef = null;
+    let userData = null;
+
+    onAuthStateChanged(auth, async user => {
+        if (!user) {
+            pointsEl.textContent = "Inicia sessão!";
+            btn.style.display = "none";
+            statusEl.textContent = "";
+            return;
+        }
+        userRef = doc(db, "users", user.uid);
+        await refreshData();
+    });
+
+    async function refreshData() {
+        const snap = await getDoc(userRef);
+        userData = snap.exists() ? snap.data() : { points: 0 };
+        const points = userData.points || 0;
+        const premiumUntil = userData.premiumUntil || 0;
+        pointsEl.textContent = points;
+        if (premiumUntil && premiumUntil > Date.now()) {
+            btn.style.display = "none";
+            const dias = Math.ceil((premiumUntil - Date.now()) / (24*60*60*1000));
+            statusEl.textContent = `🌟 Premium ativo! Expira em ${dias} dia(s).`;
+        } else if (points >= 100) {
+            btn.style.display = "";
+            statusEl.textContent = "";
+        } else {
+            btn.style.display = "none";
+            statusEl.textContent = "";
+        }
+    }
+
+    btn.onclick = async function() {
+        if (!userData || (userData.points || 0) < 100) return;
+        const expires = Date.now() + 3 * 24 * 60 * 60 * 1000;
+        await updateDoc(userRef, { premiumUntil: expires, points: 0 });
+        await refreshData();
+        alert("Premium ativado por 3 dias! Aproveita as vantagens.");
+    };
+    </script>
+</body>
+</html>
