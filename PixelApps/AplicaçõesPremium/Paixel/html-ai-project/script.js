@@ -194,20 +194,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função askOpenRouter já definida no index.html ou aqui
 async function askOpenRouter(prompt) {
-    const apiKey = "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"; // Substitui pela tua chave OpenRouter
-    const url = "https://openrouter.ai/api/v1/chat/completions";
-    const body = {
-        model: "mistralai/mixtral-8x7b", // ou outro modelo gratuito suportado
-        messages: [{ role: "user", content: prompt }]
-    };
-    const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + apiKey
-        },
-        body: JSON.stringify(body)
-    });
-    const data = await resp.json();
-    return data.choices?.[0]?.message?.content || "Sem resposta.";
+    return await puter.ai.chat(prompt);
 }
