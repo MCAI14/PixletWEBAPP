@@ -16,6 +16,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-input-bar');
     const inputField = document.getElementById('input-field');
 
+    // Adiciona botão visual para trocar idioma
+    let langBtn = document.getElementById('change-lang-btn');
+    if (!langBtn) {
+        langBtn = document.createElement('button');
+        langBtn.type = 'button';
+        langBtn.id = 'change-lang-btn';
+        langBtn.title = 'Trocar idioma do chat';
+        langBtn.textContent = '🌐';
+        langBtn.style.marginLeft = '8px';
+        langBtn.style.fontSize = '1.2em';
+        langBtn.style.padding = '8px 12px';
+        langBtn.style.borderRadius = '8px';
+        langBtn.style.border = 'none';
+        langBtn.style.background = '#e0e7ef';
+        langBtn.style.cursor = 'pointer';
+        langBtn.style.transition = 'background 0.2s';
+        langBtn.onmouseover = () => langBtn.style.background = '#b6c6e3';
+        langBtn.onmouseout = () => langBtn.style.background = '#e0e7ef';
+        // Insere o botão ao lado do input
+        inputField.parentNode.insertBefore(langBtn, inputField.nextSibling);
+    }
+
+    langBtn.onclick = function() {
+        window.setChatLanguage();
+    };
+
     chatForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const message = inputField.value.trim();
