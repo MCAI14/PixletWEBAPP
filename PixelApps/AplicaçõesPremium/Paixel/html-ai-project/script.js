@@ -2,30 +2,58 @@
 // It includes functions for processing user input, generating responses, and updating the HTML content dynamically.
 
 document.addEventListener('DOMContentLoaded', function() {
-    const userInput = document.getElementById('user-input');
-    const submitButton = document.getElementById('submit-button');
-    const responseArea = document.getElementById('response-area');
-
-    submitButton.addEventListener('click', function() {
-        const inputText = userInput.value;
-        const responseText = generateResponse(inputText);
-        updateResponseArea(responseText);
-        userInput.value = ''; // Clear input field
-    });
-
-    function generateResponse(input) {
-        // Simple AI response logic (can be expanded)
-        if (input.toLowerCase().includes('hello')) {
-            return 'Hello! How can I assist you today?';
-        } else if (input.toLowerCase().includes('how are you')) {
-            return 'I am just a program, but thanks for asking!';
-        } else {
-            return 'I am not sure how to respond to that.';
+    // Adiciona seleção de idioma no início do chat
+    let chatLanguage = localStorage.getItem('chatLanguage') || 'pt';
+    if (!localStorage.getItem('chatLanguage')) {
+        const lang = prompt('Escolha o idioma para esta conversa (ex: pt, en, es, fr):', 'pt');
+        if (lang) {
+            chatLanguage = lang.trim().toLowerCase();
+            localStorage.setItem('chatLanguage', chatLanguage);
         }
     }
 
-    function updateResponseArea(response) {
-        responseArea.innerText = response;
+    const chatContainer = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-input-bar');
+    const inputField = document.getElementById('input-field');
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = inputField.value.trim();
+        if (!message) return;
+        addMessage('user', message);
+        inputField.value = '';
+        addMessage('paixel', 'A pensar...');
+        try {
+            const resposta = await askOpenRouter(message, chatLanguage);
+            removeLastPaixelThinking();
+            addMessage('paixel', resposta);
+        } catch (err) {
+            removeLastPaixelThinking();
+            addMessage('paixel', "Erro ao contactar a IA.");
+        }
+    });
+
+    function addMessage(sender, text) {
+        const msg = document.createElement('div');
+        msg.className = 'msg ' + sender;
+        msg.textContent = text;
+        chatContainer.appendChild(msg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function removeLastPaixelThinking() {
+        const msgs = chatContainer.querySelectorAll('.msg.paixel');
+        if (msgs.length) chatContainer.removeChild(msgs[msgs.length - 1]);
+    }
+
+    // Permite trocar de idioma a qualquer momento
+    window.setChatLanguage = function() {
+        const lang = prompt('Escolha o idioma para esta conversa (ex: pt, en, es, fr):', chatLanguage);
+        if (lang) {
+            chatLanguage = lang.trim().toLowerCase();
+            localStorage.setItem('chatLanguage', chatLanguage);
+            addMessage('paixel', `Idioma alterado para: ${chatLanguage}`);
+        }
     }
 });
 
@@ -156,45 +184,17 @@ async function fetchWeather(query) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const chatContainer = document.getElementById('chat-container');
-    const chatForm = document.getElementById('chat-input-bar');
-    const inputField = document.getElementById('input-field');
-
-    chatForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const message = inputField.value.trim();
-        if (!message) return;
-        addMessage('user', message);
-        inputField.value = '';
-        addMessage('paixel', 'A pensar...');
-        try {
-            const resposta = await askOpenRouter(message);
-            removeLastPaixelThinking();
-            addMessage('paixel', resposta);
-        } catch (err) {
-            removeLastPaixelThinking();
-            addMessage('paixel', "Erro ao contactar a IA.");
-        }
-    });
-
-    function addMessage(sender, text) {
-        const msg = document.createElement('div');
-        msg.className = 'msg ' + sender;
-        msg.textContent = text;
-        chatContainer.appendChild(msg);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function removeLastPaixelThinking() {
-        const msgs = chatContainer.querySelectorAll('.msg.paixel');
-        if (msgs.length) chatContainer.removeChild(msgs[msgs.length - 1]);
-    }
-});
+// ...existing code...
 
 // Função askOpenRouter já definida no index.html ou aqui
-async function askOpenRouter(prompt) {
-    return await puter.ai.chat(prompt);
+// Função para chamar a IA Puter com idioma definido
+async function askOpenRouter(prompt, lang) {
+    // Adiciona instrução de idioma ao prompt
+    let promptLang = prompt;
+    if (lang && lang !== 'pt') {
+        promptLang = `[LANGUAGE: ${lang}] ` + prompt;
+    }
+    return await puter.ai.chat(promptLang);
 }
 
 puter.ai.chat("Sua pergunta aqui").then(function(resposta) {
