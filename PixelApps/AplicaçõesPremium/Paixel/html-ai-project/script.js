@@ -196,3 +196,8 @@ document.addEventListener('DOMContentLoaded', function() {
 async function askOpenRouter(prompt) {
     return await puter.ai.chat(prompt);
 }
+
+puter.ai.chat("Sua pergunta aqui").then(function(resposta) {
+    // Use a resposta como quiser
+    console.log(resposta);
+});
