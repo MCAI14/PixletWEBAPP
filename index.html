@@ -113,6 +113,22 @@
             height: 40px;
             margin-bottom: 5px;
         }
+        .developer-site {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            z-index: 100;
+        }
+        .developer-site:hover {
+            background-color: #0056b3;
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -334,5 +350,7 @@ onAuthStateChanged(auth, async user => {
         <button class="login-button">Login</button>
         <button class="logout-button" onclick="handleLogout()">Logout</button>
     </div>
+    
+    <a href="https://migueloe.netlify.app" class="developer-site" target="_blank">Site do Desenvolvedor</a>
 </body>
 </html>
