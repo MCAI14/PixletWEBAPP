@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-input-bar');
     const inputField = document.getElementById('input-field');
 
+    // preenche com último prompt salvo, se existir
+    const last = localStorage.getItem('lastPrompt');
+    if (last) {
+        inputField.value = last;
+    }
+
     // Adiciona botão visual para trocar idioma
     let langBtn = document.getElementById('change-lang-btn');
     if (!langBtn) {
@@ -46,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const message = inputField.value.trim();
         if (!message) return;
+        // salvar último prompt em memória local
+        localStorage.setItem('lastPrompt', message);
         addMessage('user', message);
         inputField.value = '';
         addMessage('paixel', 'A pensar...');
