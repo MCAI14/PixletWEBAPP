@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-input-bar');
     const inputField = document.getElementById('input-field');
 
-    // preenche com último prompt salvo, se existir
+    // memória de histórico de conversas
+    let history = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    // renderiza trocas anteriores
+    history.forEach(m => addMessage(m.sender, m.text, true));
+
+    // preenche com último prompt salvo, se existir (mantém compatibilidade)
     const last = localStorage.getItem('lastPrompt');
     if (last) {
         inputField.value = last;
@@ -43,6 +48,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // Insere o botão ao lado do input
         inputField.parentNode.insertBefore(langBtn, inputField.nextSibling);
     }
+    // Adiciona botão para limpar histórico de conversas
+    let clearBtn = document.getElementById('clear-history-btn');
+    if (!clearBtn) {
+        clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.id = 'clear-history-btn';
+        clearBtn.title = 'Limpar histórico de chat';
+        clearBtn.textContent = '🗑️';
+        clearBtn.style.marginLeft = '6px';
+        clearBtn.style.fontSize = '1.2em';
+        clearBtn.style.padding = '8px 12px';
+        clearBtn.style.borderRadius = '8px';
+        clearBtn.style.border = 'none';
+        clearBtn.style.background = '#e0e7ef';
+        clearBtn.style.cursor = 'pointer';
+        clearBtn.style.transition = 'background 0.2s';
+        clearBtn.onmouseover = () => clearBtn.style.background = '#b6c6e3';
+        clearBtn.onmouseout = () => clearBtn.style.background = '#e0e7ef';
+        inputField.parentNode.insertBefore(clearBtn, inputField.nextSibling);
+    }
+
+    clearBtn.onclick = function() {
+        if (confirm('Limpar histórico de chat?')) {
+            history = [];
+            localStorage.removeItem('chatHistory');
+            chatContainer.innerHTML = '';
+        }
+    };
 
     langBtn.onclick = function() {
         window.setChatLanguage();
@@ -58,7 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
         inputField.value = '';
         addMessage('paixel', 'A pensar...');
         try {
-            const resposta = await askOpenRouter(message, chatLanguage);
+            // compõe o prompt incluindo histórico recente
+            let promptWithHistory = '';
+            if (history.length) {
+                promptWithHistory = history.map(m => (m.sender === 'user' ? 'User' : 'Paixel') + ': ' + m.text).join('\n') + '\n';
+            }
+            promptWithHistory += 'User: ' + message;
+            const resposta = await askOpenRouter(promptWithHistory, chatLanguage);
             removeLastPaixelThinking();
             addMessage('paixel', resposta);
         } catch (err) {
@@ -67,12 +106,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function addMessage(sender, text) {
+    function addMessage(sender, text, skipSave = false) {
         const msg = document.createElement('div');
         msg.className = 'msg ' + sender;
         msg.textContent = text;
         chatContainer.appendChild(msg);
         chatContainer.scrollTop = chatContainer.scrollHeight;
+        if (!skipSave) {
+            // atualiza histórico e persiste (limite de 200 entradas)
+            history.push({ sender, text });
+            if (history.length > 200) history.shift();
+            localStorage.setItem('chatHistory', JSON.stringify(history));
+        }
     }
 
     function removeLastPaixelThinking() {
